@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic Characteristics Toolkit</title>
+<meta name="description" content="ENCS4380 Homework 1 - interactive toolkit for sensor dynamic characteristics">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* ===== Palette (orange shades) =====
+   Burnt #CC5500 · Bright #E24C00 · Alloy #C35214 · Goldfish #FF9913 · Pastel #FEBA4F
+   Terracotta #E2725B · Dark Topaz #EABD8C · Champagne #FAD6A5 · Light #FED8B1        */
+:root{
+  --side1:#7a2e05; --side2:#C35214;
+  --main:#E24C00; --main-dark:#CC5500; --gold:#FF9913; --pastel:#FEBA4F;
+  --terra:#E2725B; --topaz:#EABD8C; --champ:#FAD6A5; --light:#FED8B1;
+  --bg:#FFF8F0; --card:#FFFFFF; --ink:#2B1608; --muted:#7A5A44; --line:#F3DEC6;
+  --ok:#2E7D32; --bad:#C62828;
+}
+body[data-theme="terracotta"]{ --side1:#5c2418; --side2:#B5523C; --main:#E2725B; --main-dark:#C35214; --gold:#E89149; --pastel:#F0DC82; }
+body[data-theme="goldfish"]{ --side1:#8a4b00; --side2:#E78400; --main:#F76806; --main-dark:#CD7F32; --gold:#FFA62B; --pastel:#FEBA4F; }
+
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+h1,h2,h3{font-family:Sora,Inter,system-ui,sans-serif;letter-spacing:-.01em}
+
+/* ===== Layout: sidebar + content ===== */
+.app{display:flex;min-height:100vh}
+aside{
+  width:270px;flex:0 0 270px;position:sticky;top:0;height:100vh;overflow-y:auto;
+  background:linear-gradient(170deg,var(--side1) 0%,var(--side2) 100%);color:#fff;
+  display:flex;flex-direction:column;padding:22px 16px;
+}
+.brand{display:flex;gap:11px;align-items:center;margin-bottom:6px}
+.logo{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.14);display:grid;place-items:center;flex:0 0 42px}
+.brand b{font-family:Sora,sans-serif;font-size:1rem;line-height:1.2;display:block}
+.brand small{opacity:.8;font-size:.76rem}
+.side-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;opacity:.65;margin:22px 8px 8px}
+.nav a{
+  display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:10px;margin-bottom:4px;
+  color:#fff;text-decoration:none;font-weight:500;font-size:.92rem;opacity:.88;transition:background .15s
+}
+.nav a:hover{background:rgba(255,255,255,.1);opacity:1}
+.nav a.active{background:#fff;color:var(--main-dark);opacity:1;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.nav .num{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:.8rem;font-weight:700;background:rgba(255,255,255,.16);flex:0 0 26px}
+.nav a.active .num{background:var(--main);color:#fff}
+.nav .tag{margin-left:auto;white-space:nowrap;flex:0 0 auto;font-size:.66rem;padding:2px 7px;border-radius:20px;background:rgba(255,255,255,.18);font-weight:600}
+.nav a.active .tag{background:var(--champ);color:var(--main-dark)}
+.themes{display:flex;gap:8px;padding:0 8px}
+.themes button{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.5);cursor:pointer;padding:0}
+.themes button.on{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.3)}
+.side-foot{margin-top:auto;padding:18px 8px 0;font-size:.76rem;opacity:.75;line-height:1.5}
+
+.content{flex:1;min-width:0}
+.topbar{display:none}
+.page{display:none;max-width:1080px;margin:0 auto;padding:26px 24px 50px}
+.page.show{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ===== Mobile: sidebar becomes a drawer ===== */
+@media (max-width:900px){
+  aside{position:fixed;left:0;top:0;z-index:30;transform:translateX(-100%);transition:transform .25s;box-shadow:0 0 40px rgba(0,0,0,.3)}
+  aside.open{transform:none}
+  .topbar{display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:20;padding:10px 16px;
+    background:linear-gradient(90deg,var(--side1),var(--side2));color:#fff}
+  .topbar button{background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:9px;width:40px;height:40px;font-size:1.3rem;cursor:pointer}
+  .topbar b{font-family:Sora,sans-serif;font-size:.95rem}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:25;display:none}
+  .scrim.show{display:block}
+  .page{padding:18px 16px 40px}
+}
+
+/* ===== Components ===== */
+.hero{
+  border-radius:20px;padding:30px 28px;color:#fff;position:relative;overflow:hidden;margin-bottom:18px;
+  background:linear-gradient(125deg,var(--main-dark) 0%,var(--main) 55%,var(--gold) 100%);
+}
+.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.1)}
+.hero::before{content:"";position:absolute;right:60px;bottom:-90px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hero .kicker{font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;opacity:.9;font-weight:600}
+.hero h1{margin:6px 0 8px;font-size:1.9rem;line-height:1.2}
+.hero p{margin:0;max-width:640px;opacity:.95}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;position:relative;z-index:1}
+.chip{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);padding:5px 12px;border-radius:20px;font-size:.82rem;font-weight:500}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(204,85,0,.05)}
+.card h2{font-size:1.25rem;margin:0 0 6px}
+.card h3{font-size:1rem;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.card h3::before{content:"";width:6px;height:18px;border-radius:3px;background:var(--main)}
+.card p{margin:6px 0}
+.info dt{font-size:.74rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}
+.info dd{margin:2px 0 12px;font-weight:600}
+
+.team{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.member{display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
+.avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-family:Sora,sans-serif;flex:0 0 46px}
+.member b{display:block;font-size:.95rem}
+.member span{font-size:.8rem;color:var(--muted)}
+
+.modcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.modcard{display:block;text-decoration:none;color:inherit;padding:16px;border-radius:14px;border:1px solid var(--line);background:#fff;transition:transform .15s,box-shadow .15s}
+.modcard:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(204,85,0,.12)}
+.modcard .n{font-family:Sora,sans-serif;font-size:1.6rem;font-weight:700;color:var(--main)}
+.modcard b{display:block;margin:2px 0 4px}
+.modcard small{color:var(--muted)}
+.status{display:inline-block;margin-top:8px;font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:20px}
+.status.live{background:#E6F4EA;color:var(--ok)}
+.status.soon{background:var(--champ);color:var(--main-dark)}
+
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.pagehead .kicker{color:var(--main);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.14em}
+.pagehead h1{margin:2px 0 0;font-size:1.6rem}
+.owner:empty{display:none}
+.owner{font-size:.85rem;color:var(--muted);background:#fff;border:1px solid var(--line);padding:6px 12px;border-radius:20px}
+
+.eqrow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:10px 0}
+.eq{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.92rem;background:var(--champ);color:var(--ink);padding:6px 12px;border-radius:9px}
+
+.layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:1100px){.layout{grid-template-columns:1fr}}
+.controls label{display:block;font-weight:600;font-size:.88rem;margin-top:14px}
+.controls .val{float:right;font-variant-numeric:tabular-nums;color:var(--main-dark);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--main);margin-top:6px}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:4px;gap:4px;margin-top:6px}
+.seg button{flex:1;border:0;background:transparent;color:var(--muted);padding:8px;font-weight:700;cursor:pointer;font-size:.9rem;border-radius:8px;font-family:inherit}
+.seg button.on{background:var(--main);color:#fff;box-shadow:0 3px 10px rgba(226,76,0,.3)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+button.btn{border:1.5px solid var(--main);background:#fff;color:var(--main-dark);border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:.86rem;font-family:inherit}
+button.btn.primary{background:var(--main);color:#fff}
+button.btn:hover{filter:brightness(.96)}
+.note{font-size:.84rem;color:var(--muted);margin-top:8px}
+.plot{width:100%;height:470px}
+@media (max-width:600px){.plot{height:520px}}
+.ib{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--main);background:#fff;color:var(--main-dark);
+  font:700 .8rem/1 Georgia,serif;font-style:italic;cursor:pointer;display:inline-grid;place-items:center;padding:0;margin-left:2px;flex:0 0 24px}
+.ib:hover,.ib.on{background:var(--main);color:#fff}
+.tip{display:none;position:relative;background:var(--champ);border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:.88rem;line-height:1.55}
+.tip.show{display:block;animation:fade .2s ease}
+.tip::before{content:"";position:absolute;top:-7px;left:22px;width:14px;height:14px;background:var(--champ);transform:rotate(45deg)}
+.tip ul{margin:4px 0 0;padding-left:18px}.tip li{margin-bottom:4px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+.stat{background:var(--bg);border-left:4px solid var(--gold);border-radius:8px;padding:8px 11px}
+.stat .k{font-size:.76rem;color:var(--muted)}
+.stat .v{font-size:1.02rem;font-weight:700;font-variant-numeric:tabular-nums}
+
+.predict{background:linear-gradient(135deg,#fff 0%,var(--light) 160%)}
+.predict input[type=number]{width:160px;padding:9px 11px;border:1.5px solid var(--topaz);border-radius:10px;font-size:.95rem;font-family:inherit}
+.qtext{font-size:1rem;margin:4px 0 12px}
+.fb{margin-top:12px;padding:11px 13px;border-radius:10px;display:none}
+.fb.ok{display:block;background:#E6F4EA;color:#1B5E20}
+.fb.no{display:block;background:#FDECEA;color:#7F1D1D}
+.fb.warn{display:block;background:var(--champ);color:#6b3a0b}
+
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.88rem;min-width:540px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);color:var(--muted);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}
+.pill{display:inline-block;padding:2px 10px;border-radius:20px;font-weight:700;font-size:.78rem}
+.pill.pass{background:#E6F4EA;color:var(--ok)}.pill.fail{background:#FDECEA;color:var(--bad)}.pill.todo{background:var(--champ);color:var(--main-dark)}
+ul.tight{margin:6px 0;padding-left:20px}
+ul.tight li{margin-bottom:6px}
+
+.soonbox{text-align:center;padding:40px 20px}
+.soonbox .big{font-family:Sora,sans-serif;font-size:3rem;font-weight:700;color:var(--main)}
+.loaderr{display:none;background:#FDECEA;color:#7F1D1D;padding:12px 14px;border-radius:10px;margin-bottom:14px}
+</style>
+</head>
+<body data-theme="sunset">
+
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside id="side">
+    <div class="brand">
+      <div class="logo">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+          <path d="M2 22 H24" stroke="#fff" stroke-opacity=".5" stroke-width="1.5"/>
+          <path d="M3 21 C7 21 7 6 13 6 C18 6 19 5 24 5" stroke="#FEBA4F" stroke-width="2.6" stroke-linecap="round"/>
+          <circle cx="13" cy="6" r="2.4" fill="#fff"/>
+        </svg>
+      </div>
+      <div>
+        <b>Dynamics Toolkit</b>
+        <small>ENCS4380 · Homework 1</small>
+      </div>
+    </div>
+
+    <div class="side-label">Explore</div>
+    <nav class="nav" id="nav">
+      <a href="#home" data-page="home"><span class="num">⌂</span>Overview</a>
+      <a href="#m1" data-page="m1"><span class="num">1</span>First-order time<span class="tag">Live</span></a>
+      <a href="#m2" data-page="m2"><span class="num">2</span>Frequency response<span class="tag">9 Nov</span></a>
+      <a href="#m3" data-page="m3"><span class="num">3</span>Second-order<span class="tag">9 Nov</span></a>
+      <a href="#m4" data-page="m4"><span class="num">4</span>Guess the sensor<span class="tag">12 Nov</span></a>
+      <a href="#val" data-page="val"><span class="num">✓</span>Validation checks</a>
+      <a href="#team" data-page="team"><span class="num">☺</span>Team</a>
+    </nav>
+
+    <div class="side-label">Colour theme</div>
+    <div class="themes">
+      <button type="button" data-t="sunset" class="on" style="background:linear-gradient(135deg,#CC5500,#FF9913)" aria-label="Sunset theme"></button>
+      <button type="button" data-t="terracotta" style="background:linear-gradient(135deg,#B5523C,#E2725B)" aria-label="Terracotta theme"></button>
+      <button type="button" data-t="goldfish" style="background:linear-gradient(135deg,#E78400,#FFA62B)" aria-label="Goldfish theme"></button>
+    </div>
+
+    <div class="side-foot">
+      Birzeit University<br>
+      Faculty of Engineering &amp; Technology<br>
+      Instructor: Dr. Wasel Ghanem
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ================= CONTENT ================= -->
+  <div class="content">
+    <div class="topbar">
+      <button type="button" id="menuBtn" aria-label="Open menu">☰</button>
+      <b>Dynamics Toolkit</b>
+    </div>
+
+    <!-- ===== OVERVIEW ===== -->
+    <section class="page" id="home">
+      <div class="hero">
+        <div class="kicker">ENCS4380 · Interfacing Techniques</div>
+        <h1>Dynamic Characteristics Interactive Toolkit</h1>
+        <p>A sensor never reports the present. It reports the past, smoothed. This toolkit lets you move the parameters and watch how far behind a sensor is.</p>
+        <div class="chips">
+          <span class="chip">Homework 1</span>
+          <span class="chip">Birzeit University</span>
+          <span class="chip">Dr. Wasel Ghanem</span>
+          <span class="chip">First Semester 2026/2027</span>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Course</h3>
+          <dl class="info">
+            <dt>Course</dt><dd>ENCS4380 — Interfacing Techniques</dd>
+            <dt>Assignment</dt><dd>Homework 1: Dynamic Characteristics Interactive Toolkit</dd>
+            <dt>Instructor</dt><dd>Dr. Wasel Ghanem</dd>
+            <dt>Due</dt><dd>Thursday, 12 November 2026</dd>
+          </dl>
+        </div>
+        <div class="card">
+          <h3>Team <span id="groupName" style="font-weight:500;color:var(--muted);font-size:.85rem"></span></h3>
+          <div class="team" id="teamMini"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Modules</h3>
+        <div class="modcards">
+          <a class="modcard" href="#m1"><div class="n">01</div><b>First-order time response</b><small>Thermometer · step and ramp · log plot</small><br><span class="status live">Live</span></a>
+          <a class="modcard" href="#m2"><div class="n">02</div><b>First-order frequency response</b><small>Sines · Bode plot · dynamic error</small><br><span class="status soon">Checkpoint 2 · 9 Nov</span></a>
+          <a class="modcard" href="#m3"><div class="n">03</div><b>Second-order response</b><small>Accelerometer · damping · state space</small><br><span class="status soon">Checkpoint 2 · 9 Nov</span></a>
+          <a class="modcard" href="#m4"><div class="n">04</div><b>Guess the sensor</b><small>Hidden sensor challenge with scoring</small><br><span class="status soon">Final · 12 Nov</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MODULE 1 ===== -->
+    <section class="page" id="m1">
+      <div class="loaderr" id="loadErr">The plotting library (Plotly) could not load. Check your internet connection and refresh the page.</div>
+
+      <div class="pagehead">
+        <div>
+          <div class="kicker">Module 01</div>
+          <h1>First-order time response</h1>
+        </div>
+        <div class="owner" id="m1owner"></div>
+      </div>
+
+      <div class="card">
+        <p>A first-order sensor, like a thermometer, has one part that <b>stores</b> energy (the heat capacity of the bulb) and one that <b>resists</b> its flow (the glass wall). Its model:</p>
+        <div class="eqrow"><span class="eq">τ·dy/dt + y = K·x(t)</span><span class="eq">G(s) = K / (τs + 1)</span></div>
+        <p><b>K</b> (static sensitivity) decides <i>where</i> the output ends up. <b>τ</b> (time constant) decides <i>how fast</i> it gets there.</p>
+      </div>
+
+      <div class="layout">
+        <div class="card controls">
+          <h3>Controls <button class="ib" type="button" data-k="controls" aria-label="About the controls">i</button></h3>
+          <div class="tip" id="tip-controls"></div>
+          <label>Input type</label>
+          <div class="seg" role="group" aria-label="Input type">
+            <button id="modeStep" class="on" type="button">Step</button>
+            <button id="modeRamp" type="button">Ramp</button>
+          </div>
+
+          <label for="K">Static sensitivity K <span class="val" id="Kv"></span></label>
+          <input type="range" id="K" min="0.1" max="5" step="0.1" value="1">
+
+          <label for="tau">Time constant τ <span class="val" id="tauv"></span></label>
+          <input type="range" id="tau" min="0.1" max="20" step="0.1" value="2">
+
+          <label for="A" id="Alabel">Step size A <span class="val" id="Av"></span></label>
+          <input type="range" id="A" min="0.5" max="100" step="0.5" value="10">
+
+          <div id="y0row">
+            <label for="y0">Initial reading y₀ <span class="val" id="y0v"></span></label>
+            <input type="range" id="y0" min="-50" max="100" step="1" value="0">
+          </div>
+
+          <div class="btnrow">
+            <button class="btn primary" id="presetTea" type="button">☕ Thermometer into tea</button>
+            <button class="btn" id="reset" type="button">Reset</button>
+          </div>
+          <p class="note" id="presetNote">Tea example: τ = 10 s. Works for both Step and Ramp.</p>
+        </div>
+
+        <div class="card">
+          <h3><span id="p1title">Step response</span> <button class="ib" type="button" data-k="plot1" aria-label="How to read this curve">i</button></h3>
+          <div class="tip" id="tip-plot1"></div>
+          <div id="plot1" class="plot"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3><span id="p2title">Error fraction (log axis)</span> <button class="ib" type="button" data-k="plot2" aria-label="How to read this curve">i</button></h3>
+        <div class="tip" id="tip-plot2"></div>
+        <div id="plot2" class="plot"></div>
+      </div>
+
+      <div class="card predict">
+        <h3>Predict, then check <button class="ib" type="button" data-k="predict" aria-label="About this section">i</button></h3>
+        <div class="tip" id="tip-predict"></div>
+        <p class="note">Write your prediction <b>before</b> touching the sliders, then press Check.</p>
+        <p class="qtext" id="qText"></p>
+        <div class="btnrow" style="margin-top:0;align-items:center">
+          <input type="number" id="qAns" step="any" placeholder="your answer" aria-label="Your answer">
+          <span id="qUnit"></span>
+          <button class="btn primary" id="qCheck" type="button">Check</button>
+          <button class="btn" id="qNew" type="button">New question</button>
+        </div>
+        <div class="fb" id="qFb"></div>
+        <p class="note" id="qScore"></p>
+      </div>
+
+      <div class="card">
+        <h3>Module 1 validation (live) <button class="ib" type="button" data-k="val" aria-label="About the validation checks">i</button></h3>
+        <div class="tip" id="tip-val"></div>
+        <p class="note">"Our value" is read off the plotted curve for the current slider values.</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Check</th><th>Expected</th><th>Our value</th><th>Result</th></tr></thead>
+            <tbody id="valBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===== MODULES 2–4 (planned) ===== -->
+    <section class="page" id="m2">
+      <div class="pagehead"><div><div class="kicker">Module 02</div><h1>First-order frequency response</h1></div><div class="owner" id="m2owner"></div></div>
+      <div class="card soonbox"><div class="big">9 Nov</div><p>Arrives at Checkpoint 2: input and output sines on one plot, amplitude ratio M = 1/√(1+(ωτ)²), phase lag φ = −tan⁻¹(ωτ), Bode plot with the cutoff at ω = 1/τ, and a dynamic-error calculator.</p></div>
+    </section>
+    <section class="page" id="m3">
+      <div class="pagehead"><div><div class="kicker">Module 03</div><h1>Second-order response</h1></div><div class="owner" id="m3owner"></div></div>
+      <div class="card soonbox"><div class="big">9 Nov</div><p>Arrives at Checkpoint 2: under-, critically and over-damped steps, rise time, peak time, overshoot and settling time read off the curve, poles in the s-plane, and the state-space panel.</p></div>
+    </section>
+    <section class="page" id="m4">
+      <div class="pagehead"><div><div class="kicker">Module 04</div><h1>Guess the sensor</h1></div><div class="owner" id="m4owner"></div></div>
+      <div class="card soonbox"><div class="big">12 Nov</div><p>Arrives with the final release: a hidden random sensor with noise, you estimate τ or ζ and ωₙ, then the page reveals the truth and scores you.</p></div>
+    </section>
+
+    <!-- ===== VALIDATION ===== -->
+    <section class="page" id="val">
+      <div class="pagehead"><div><div class="kicker">Required by the brief</div><h1>Validation checks</h1></div></div>
+      <div class="card">
+        <p class="note">Results from the lecture slides that the toolkit must reproduce. Test 1 is computed live from the Module 1 curve with τ = 2 s, K = 1, A = 10.</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>#</th><th>Check</th><th>Expected</th><th>Our value</th><th>Result</th></tr></thead>
+            <tbody id="valAll"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TEAM ===== -->
+    <section class="page" id="team">
+      <div class="pagehead"><div><div class="kicker">Who built this</div><h1>Team</h1></div></div>
+      <div class="card">
+        <div class="team" id="teamFull"></div>
+      </div>
+      <div class="card">
+        <h3>Course</h3>
+        <dl class="info">
+          <dt>Course</dt><dd>ENCS4380 — Interfacing Techniques, Birzeit University</dd>
+          <dt>Assignment</dt><dd>Homework 1: Dynamic Characteristics Interactive Toolkit</dd>
+          <dt>Instructor</dt><dd>Dr. Wasel Ghanem</dd>
+        </dl>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   EDIT YOUR TEAM HERE
+   ========================================================= */
+const GROUP_NAME = "";
+const TEAM = [
+  { name: "Dalia Abu Baker",          role: "Module 1 — First-order time response" },
+  { name: "Ghaleb Raed",              role: "Module  — " },
+  { name: "Hala Sarsour",             role: "Module  — " },
+  { name: "Mohammad Isam Obeidallah", role: "Module  — " }
+];
+/* Who built each module (shown at the top of each module page) */
+const MODULE_OWNERS = {
+  m1: ["Dalia Abu Baker"],
+  m2: [], m3: [], m4: []
+};
+
+/* ---------- Team rendering ---------- */
+const AV = ['#E24C00','#C35214','#FF9913','#E2725B','#CD7F32','#F76806'];
+function initials(n){ return n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join(''); }
+function memberHTML(m,i){ return `<div class="member"><div class="avatar" style="background:${AV[i%AV.length]}">${initials(m.name)}</div><div><b>${m.name}</b><span>${m.role}</span></div></div>`; }
+document.getElementById('teamMini').innerHTML = TEAM.map(memberHTML).join('');
+document.getElementById('teamFull').innerHTML = TEAM.map(memberHTML).join('');
+document.getElementById('groupName').textContent = GROUP_NAME ? '· ' + GROUP_NAME : '';
+Object.entries(MODULE_OWNERS).forEach(([k,names]) => { const el=document.getElementById(k+'owner'); if(el) el.textContent = names.length ? 'Built by ' + names.join(', ') : ''; });
+
+/* ---------- Sidebar navigation ---------- */
+const pages = [...document.querySelectorAll('.page')];
+const links = [...document.querySelectorAll('#nav a')];
+const side = document.getElementById('side'), scrim = document.getElementById('scrim');
+function closeMenu(){ side.classList.remove('open'); scrim.classList.remove('show'); }
+document.getElementById('menuBtn').onclick = () => { side.classList.add('open'); scrim.classList.add('show'); };
+scrim.onclick = closeMenu;
+function route(){
+  const id = (location.hash || '#home').slice(1);
+  const target = document.getElementById(id) && document.getElementById(id).classList.contains('page') ? id : 'home';
+  pages.forEach(p => p.classList.toggle('show', p.id === target));
+  links.forEach(a => a.classList.toggle('active', a.dataset.page === target));
+  closeMenu();
+  window.scrollTo(0,0);
+  if(target === 'm1' && window.Plotly){ update(); setTimeout(()=>{ Plotly.Plots.resize('plot1'); Plotly.Plots.resize('plot2'); }, 30); }
+  if(target === 'val') renderValAll();
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- Theme switch ---------- */
+document.querySelectorAll('.themes button').forEach(b => b.onclick = () => {
+  document.body.dataset.theme = b.dataset.t;
+  document.querySelectorAll('.themes button').forEach(x => x.classList.toggle('on', x === b));
+  try { localStorage.setItem('dyn-theme', b.dataset.t); } catch(e) {}
+  if(window.Plotly) update();
+});
+try { const t = localStorage.getItem('dyn-theme'); if(t){ const b=document.querySelector(`.themes button[data-t="${t}"]`); if(b) b.click(); } } catch(e) {}
+
+/* =========================================================
+   MODULE 1 — maths and plots
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const N = 801;
+const cfg = {responsive:true, displayModeBar:false};
+let mode = 'step', checkPt = null, currentQ = null, score = {right:0, total:0};
+
+function css(v){ return getComputedStyle(document.body).getPropertyValue(v).trim(); }
+function colors(){ return {out:css('--main'), ideal:'#B8A898', tan:css('--gold'), mark:css('--main-dark'), inp:'#2B1608', star:'#7c3aed'}; }
+
+function fmt(x, d=3){ if(!isFinite(x)) return '—'; return parseFloat(Number(x).toFixed(d)).toString(); }
+function params(){ return {K:+$('K').value, tau:+$('tau').value, A:+$('A').value, y0:+$('y0').value}; }
+function linspace(a,b,n){ const s=(b-a)/(n-1); return Array.from({length:n},(_,i)=>a+i*s); }
+function interp(xs, ys, x){
+  const n = xs.length;
+  if(x <= xs[0]) return ys[0];
+  if(x >= xs[n-1]) return ys[n-1];
+  let lo=0, hi=n-1;
+  while(hi-lo>1){ const m=(lo+hi)>>1; if(xs[m]<=x) lo=m; else hi=m; }
+  const f=(x-xs[lo])/(xs[hi]-xs[lo]);
+  return ys[lo]+f*(ys[hi]-ys[lo]);
+}
+function crossing(xs, ys, level){
+  for(let i=1;i<xs.length;i++){
+    if(xs[i-1] < 0) continue;
+    const a=ys[i-1]-level, b=ys[i]-level;
+    if(a*b <= 0 && ys[i] !== ys[i-1]){
+      const f=(level-ys[i-1])/(ys[i]-ys[i-1]);
+      return xs[i-1]+f*(xs[i]-xs[i-1]);
+    }
+  }
+  return NaN;
+}
+
+/* Closed-form responses from the slides */
+function stepData(p){
+  const KA=p.K*p.A;
+  const t=linspace(-0.5*p.tau, 5*p.tau, N);
+  const y=t.map(s => s<0 ? p.y0 : KA + (p.y0-KA)*Math.exp(-s/p.tau));
+  return {t, y, KA};
+}
+function rampData(p){                       // A is the ramp rate q-dot
+  const T=10*p.tau;
+  const t=linspace(0, T, N);
+  const x=t.map(s => p.A*s);
+  const yk=t.map(s => p.A*(p.tau*Math.exp(-s/p.tau) + s - p.tau));   // y(t)/K
+  return {t, x, yk, T};
+}
+
+function lay(xt, yt, extra){
+  return Object.assign({
+    margin:{l:58,r:16,t:16,b:130},
+    xaxis:{title:{text:xt}, zeroline:false, gridcolor:'#F6E7D6', linecolor:'#EABD8C'},
+    yaxis:{title:{text:yt}, zeroline:false, gridcolor:'#F6E7D6', linecolor:'#EABD8C'},
+    legend:{orientation:'h', x:0, y:-0.17, yanchor:'top', font:{size:11.5}},
+    paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'#fff',
+    font:{family:'Inter, system-ui, sans-serif', size:12, color:'#2B1608'},
+    hovermode:'closest'
+  }, extra || {});
+}
+function stats(id, items){
+  $(id).innerHTML = items.map(([k,v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+}
+
+/* Step mode */
+function drawStep(p){
+  const C=colors();
+  const d=stepData(p), KA=d.KA, dy=KA-p.y0, t0=-0.5*p.tau, T=5*p.tau;
+  const yT=interp(d.t,d.y,p.tau), y3=interp(d.t,d.y,3*p.tau);
+  const hov='t = %{x:.3f} s<br>y = %{y:.3f}<extra></extra>';
+  const tr=[
+    {x:d.t, y:d.y, name:'Sensor output y(t)', line:{color:C.out,width:3.5}, hovertemplate:hov},
+    {x:[t0,0,0,T], y:[p.y0,p.y0,KA,KA], name:'Ideal sensor (instant)', line:{color:C.ideal,dash:'dot',width:2}, hoverinfo:'skip'},
+    {x:[0,p.tau], y:[p.y0,KA], name:'Initial slope (hits KA at τ)', line:{color:C.tan,dash:'dash',width:2}, hoverinfo:'skip'},
+    {x:[p.tau,3*p.tau], y:[yT,y3], mode:'markers', name:'63.2% at τ, 95% at 3τ', marker:{color:C.mark,size:12,line:{color:'#fff',width:2}}, hovertemplate:hov}
+  ];
+  if(checkPt) tr.push({x:[checkPt.t], y:[checkPt.y], mode:'markers', name:'Your check point', marker:{symbol:'star',size:18,color:C.star}, hovertemplate:hov});
+  const shapes=[[p.tau,yT],[3*p.tau,y3]].flatMap(([tx,ty]) => [
+    {type:'line', x0:tx, x1:tx, y0:p.y0, y1:ty, line:{color:C.mark,dash:'dot',width:1}},
+    {type:'line', x0:t0, x1:tx, y0:ty, y1:ty, line:{color:C.mark,dash:'dot',width:1}}
+  ]);
+  const up = dy>=0 ? 1 : -1;
+  const ann=[
+    {x:p.tau, y:yT, text:'<b>63.2% at t = τ</b><br>t = '+fmt(p.tau)+' s, y = '+fmt(yT), align:'left', showarrow:true, arrowcolor:C.mark, ax:62, ay:38*up, font:{size:11.5,color:C.mark}, bgcolor:'rgba(255,255,255,.9)'},
+    {x:3*p.tau, y:y3, text:'<b>95% at t = 3τ</b><br>t = '+fmt(3*p.tau)+' s, y = '+fmt(y3), align:'left', showarrow:true, arrowcolor:C.mark, ax:20, ay:48*up, font:{size:11.5,color:C.mark}, bgcolor:'rgba(255,255,255,.9)'},
+    {x:4.6*p.tau, y:KA, text:'final value KA = '+fmt(KA), showarrow:false, yshift:12*up, font:{size:11.5,color:C.inp}}
+  ];
+  $('p1title').textContent='Step response';
+  Plotly.react('plot1', tr, lay('time t (s)', 'output y', {shapes, annotations:ann}), cfg);
+
+}
+
+function drawErrFrac(p){
+  const C=colors();
+  const d=stepData(p), KA=d.KA, dy=KA-p.y0;
+  $('p2title').textContent='Error fraction (log axis)';
+  if(Math.abs(dy) < 1e-9){
+    Plotly.react('plot2', [], lay('time t (s)', 'error fraction eₘ', {annotations:[{text:'No change to follow (y₀ = KA). Move y₀ or A.', showarrow:false, x:.5, y:.5, xref:'paper', yref:'paper'}]}), cfg);
+    return;
+  }
+  const t=[], em=[];
+  d.t.forEach((s,i) => { if(s>=0){ t.push(s); em.push((d.y[i]-KA)/(p.y0-KA)); } });
+  const e1=interp(t,em,p.tau), e3=interp(t,em,3*p.tau);
+  const slope=(Math.log(e3)-Math.log(e1))/(2*p.tau);
+  const tr=[
+    {x:t, y:em, name:'Error fraction eₘ(t)', line:{color:C.out,width:3.5}, hovertemplate:'t = %{x:.3f} s<br>eₘ = %{y:.4f}<extra></extra>'},
+    {x:[p.tau], y:[e1], mode:'markers', name:'eₘ = 0.368 at t = τ', marker:{color:C.mark,size:12,line:{color:'#fff',width:2}}, hovertemplate:'t = %{x:.3f} s<br>eₘ = %{y:.4f}<extra></extra>'}
+  ];
+  const shapes=[
+    {type:'line', x0:p.tau, x1:p.tau, y0:0.005, y1:e1, line:{color:C.mark,dash:'dot',width:1}},
+    {type:'line', x0:0, x1:p.tau, y0:e1, y1:e1, line:{color:C.mark,dash:'dot',width:1}}
+  ];
+  const ann=[
+    {x:p.tau, y:Math.log10(e1), text:'<b>eₘ = '+fmt(e1,4)+'</b> at t = τ = '+fmt(p.tau)+' s', showarrow:true, arrowcolor:C.mark, ax:70, ay:-30, font:{size:11.5,color:C.mark}, bgcolor:'rgba(255,255,255,.9)'},
+    {x:3.2*p.tau, y:Math.log10(Math.exp(-3.2)), text:'<b>slope = '+fmt(slope,4)+' s⁻¹</b><br>−1/τ = '+fmt(-1/p.tau,4)+' → τ = '+fmt(-1/slope)+' s', align:'left', showarrow:true, ax:50, ay:-45, font:{size:11.5,color:C.inp}, bgcolor:'rgba(255,255,255,.9)'}
+  ];
+  const L=lay('time t (s)', 'error fraction eₘ (log scale)', {shapes, annotations:ann});
+  L.yaxis.type='log'; L.yaxis.range=[Math.log10(0.005), 0.05]; L.yaxis.dtick=1; L.yaxis.exponentformat='none';
+  Plotly.react('plot2', tr, L, cfg);
+}
+
+/* Ramp mode */
+function drawRamp(p){
+  const C=colors();
+  const d=rampData(p), ta=8*p.tau, xa=p.A*ta, ya=interp(d.t,d.yk,ta), tl=ya/p.A;
+  const tr=[
+    {x:d.t, y:d.x, name:'Input x(t) = q̇·t', line:{color:C.inp,dash:'dashdot',width:2}, hovertemplate:'t = %{x:.3f} s<br>x = %{y:.3f}<extra></extra>'},
+    {x:d.t, y:d.yk, name:'Sensor output y(t)/K', line:{color:C.out,width:3.5}, hovertemplate:'t = %{x:.3f} s<br>y/K = %{y:.3f}<extra></extra>'},
+    {x:[tl,ta], y:[ya,ya], mode:'lines+markers', name:'Time lag (= τ)', line:{color:C.tan,width:3}, marker:{size:7}, hoverinfo:'skip'},
+    {x:[ta,ta], y:[ya,xa], mode:'lines+markers', name:'Steady-state error (= q̇τ)', line:{color:C.mark,width:3}, marker:{size:7}, hoverinfo:'skip'}
+  ];
+  const ann=[
+    {x:(tl+ta)/2, y:ya, text:'<b>time lag = '+fmt(ta-tl)+' s</b> (τ = '+fmt(p.tau)+' s)', showarrow:true, arrowcolor:C.tan, ax:30, ay:45, font:{size:11.5,color:C.mark}, bgcolor:'rgba(255,255,255,.9)'},
+    {x:ta, y:(ya+xa)/2, text:'<b>steady-state error = '+fmt(xa-ya)+'</b><br>(q̇τ = '+fmt(p.A*p.tau)+')', align:'right', showarrow:true, arrowcolor:C.mark, ax:-95, ay:-40, font:{size:11.5,color:C.mark}, bgcolor:'rgba(255,255,255,.9)'},
+    {x:0.02, y:0.97, xref:'paper', yref:'paper', xanchor:'left', yanchor:'top', text:'ramp rate q̇ = '+fmt(p.A)+' units/s', showarrow:false, font:{size:11.5,color:C.inp}}
+  ];
+  $('p1title').textContent='Ramp response';
+  Plotly.react('plot1', tr, lay('time t (s)', 'x(t) and y(t)/K', {annotations:ann}), cfg);
+}
+
+function drawRampErr(p){
+  const C=colors();
+  const d=rampData(p), em=d.t.map((s,i) => d.x[i]-d.yk[i]), sse=p.A*p.tau;
+  const eT=interp(d.t,em,p.tau);
+  $('p2title').textContent='Ramp measurement error';
+  const tr=[
+    {x:d.t, y:em, name:'Measurement error eₘ(t)', line:{color:C.out,width:3.5}, hovertemplate:'t = %{x:.3f} s<br>eₘ = %{y:.3f}<extra></extra>'},
+    {x:[0,d.T], y:[sse,sse], mode:'lines', name:'Steady-state error q̇τ', line:{color:C.mark,dash:'dash',width:2}, hoverinfo:'skip'},
+    {x:[p.tau], y:[eT], mode:'markers', name:'At t = τ: 63.2% of q̇τ', marker:{color:C.tan,size:12,line:{color:'#fff',width:2}}, hovertemplate:'t = %{x:.3f} s<br>eₘ = %{y:.3f}<extra></extra>'}
+  ];
+  const ann=[
+    {x:p.tau, y:eT, text:'<b>at t = τ: '+fmt(eT)+'</b> (63.2% of q̇τ)', showarrow:true, arrowcolor:C.tan, ax:70, ay:40, font:{size:11.5,color:C.mark}, bgcolor:'rgba(255,255,255,.9)'},
+    {x:0.98*d.T, y:sse, xanchor:'right', text:'<b>steady-state error q̇τ = '+fmt(sse)+'</b>', showarrow:false, yshift:-14, font:{size:11.5,color:C.mark}},
+    {x:5*p.tau, y:interp(d.t,em,5*p.tau), text:'transient gone after ≈ 5τ = '+fmt(5*p.tau)+' s', showarrow:true, ax:40, ay:55, font:{size:11.5,color:C.inp}, bgcolor:'rgba(255,255,255,.9)'}
+  ];
+  Plotly.react('plot2', tr, lay('time t (s)', 'error x − y/K', {annotations:ann}), cfg);
+}
+
+/* Validation (Module 1, live) */
+function m1Checks(p){
+  const rows=[];
+  const KA=p.K*p.A, dy=KA-p.y0;
+  if(Math.abs(dy) < 1e-9){
+    rows.push(['Step checks','—','Set y₀ ≠ KA to run them',null]);
+  } else {
+    const s=stepData(p);
+    const r1=(interp(s.t,s.y,p.tau)-p.y0)/dy, r3=(interp(s.t,s.y,3*p.tau)-p.y0)/dy;
+    rows.push(['Step: fraction of change at t = τ','0.632 → y(τ) = 0.632·KA', fmt(r1,4), Math.abs(r1-0.632)<0.002]);
+    rows.push(['Step: fraction of change at t = 3τ','0.950 → y(3τ) = 0.95·KA', fmt(r3,4), Math.abs(r3-0.95)<0.002]);
+    const e1=(interp(s.t,s.y,p.tau)-KA)/(p.y0-KA), e3=(interp(s.t,s.y,3*p.tau)-KA)/(p.y0-KA);
+    const sl=(Math.log(e3)-Math.log(e1))/(2*p.tau);
+    rows.push(['Error-fraction slope (log plot)','−1/τ = '+fmt(-1/p.tau,4)+' s⁻¹', fmt(sl,4)+' s⁻¹', Math.abs(sl*p.tau+1)<0.001]);
+  }
+  const r=rampData(p), v=interp(r.t,r.yk,r.T);
+  const lag=r.T - v/p.A, sse=p.A*r.T - v;
+  rows.push(['Ramp: steady-state time lag','τ = '+fmt(p.tau)+' s', fmt(lag,4)+' s', Math.abs(lag-p.tau)/p.tau<0.01]);
+  rows.push(['Ramp: steady-state error','q̇τ = '+fmt(p.A*p.tau), fmt(sse,4), Math.abs(sse-p.A*p.tau)/(p.A*p.tau)<0.01]);
+  return rows;
+}
+function pill(ok){ return ok===null ? '<span class="pill todo">—</span>' : ok===true ? '<span class="pill pass">PASS</span>' : ok===false ? '<span class="pill fail">FAIL</span>' : `<span class="pill todo">${ok}</span>`; }
+function validate(p){
+  $('valBody').innerHTML = m1Checks(p).map(([n,e,y,ok]) => `<tr><td>${n}</td><td>${e}</td><td>${y}</td><td>${pill(ok)}</td></tr>`).join('');
+}
+function renderValAll(){
+  const s=stepData({K:1,tau:2,A:10,y0:0});
+  const a=interp(s.t,s.y,2), b=interp(s.t,s.y,6);
+  const ok = Math.abs(a-6.32)<0.02 && Math.abs(b-9.5)<0.02;
+  const rows=[
+    ['1','First-order step','y(τ) = 0.632 KA, y(3τ) = 0.95 KA', `y(τ) = ${fmt(a/10,4)} KA, y(3τ) = ${fmt(b/10,4)} KA`, ok],
+    ['2','τ = 0.2 s, input sin 2t','M = 0.93, lag 21.8°','—','Module 2'],
+    ['3','100 Hz, ≤ 5% dynamic error','τmax ≈ 0.52 ms, 9.3° at 50 Hz','—','Module 2'],
+    ['4','Second-order, ζ = 0.5','overshoot = 16.3%','—','Module 3'],
+    ['5','Second-order, ζ = 1','no overshoot','—','Module 3'],
+    ['6','State space m = 1, b = 2, k = 4','eigenvalues = −1 ± j1.732','—','Module 3']
+  ];
+  $('valAll').innerHTML = rows.map(([i,n,e,y,ok]) => `<tr><td>${i}</td><td>${n}</td><td>${e}</td><td>${y}</td><td>${pill(ok)}</td></tr>`).join('');
+}
+
+/* Predict, then check */
+const QTYPES = {step:['pct','read','t95'], ramp:['lag','sse','errTau']};
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function makeQ(type, p, n){
+  const KA=p.K*p.A, dy=KA-p.y0;
+  switch(type){
+    case 'pct': {
+      const f=1-Math.exp(-n);
+      return {text:`The sensor has τ = ${fmt(p.tau)} s. Predict: what <b>percentage of the final change</b> will it show at t = ${fmt(n*p.tau)} s?`,
+        ans:100*f, tol:3, unit:'%',
+        explain:`t = ${fmt(n)}τ, so the reading has covered 1 − e<sup>−${fmt(n)}</sup> = ${fmt(100*f,1)}% of the change. It depends only on t/τ, not on K or A.`,
+        pt:{t:n*p.tau, y:p.y0+dy*f}};
+    }
+    case 'read': {
+      const t=n*p.tau, y=KA+(p.y0-KA)*Math.exp(-n);
+      return {text:`Starting from y₀ = ${fmt(p.y0)}, the input steps by A = ${fmt(p.A)}, with K = ${fmt(p.K)} and τ = ${fmt(p.tau)} s. Predict: what will the sensor <b>read</b> at t = ${fmt(t)} s?`,
+        ans:y, tol:Math.max(0.03*Math.abs(dy),1e-6), unit:'',
+        explain:`Final value KA = ${fmt(KA)}. y(t) = KA + (y₀ − KA)e<sup>−t/τ</sup> = ${fmt(KA)} + (${fmt(p.y0-KA)})·e<sup>−${fmt(n)}</sup> = ${fmt(y)}.`,
+        pt:{t, y}};
+    }
+    case 't95':
+      return {text:`With τ = ${fmt(p.tau)} s, predict: after how many <b>seconds</b> will the reading have covered 95% of the change?`,
+        ans:3*p.tau, tol:0.05*3*p.tau, unit:'s',
+        explain:`95% is reached at about 3τ = ${fmt(3*p.tau)} s (exactly −τ·ln 0.05 = ${fmt(-p.tau*Math.log(0.05))} s).`,
+        pt:{t:3*p.tau, y:p.y0+0.95*dy}};
+    case 'lag':
+      return {text:`The input rises at q̇ = ${fmt(p.A)} units/s and τ = ${fmt(p.tau)} s. Predict: once the transient has died out, how many <b>seconds behind</b> the input is y/K?`,
+        ans:p.tau, tol:0.05*p.tau, unit:'s',
+        explain:`The steady-state time lag of a first-order sensor on a ramp is exactly τ = ${fmt(p.tau)} s, whatever the ramp rate.`};
+    case 'sse':
+      return {text:`The input rises at q̇ = ${fmt(p.A)} units/s and τ = ${fmt(p.tau)} s. Predict: what is the <b>steady-state error</b> x − y/K?`,
+        ans:p.A*p.tau, tol:0.05*p.A*p.tau, unit:'units',
+        explain:`Steady-state error = q̇τ = ${fmt(p.A)} × ${fmt(p.tau)} = ${fmt(p.A*p.tau)}. A faster ramp or a slower sensor gives a bigger error.`};
+    case 'errTau': {
+      const a=p.A*p.tau*(1-Math.exp(-1));
+      return {text:`The input rises at q̇ = ${fmt(p.A)} units/s and τ = ${fmt(p.tau)} s. Predict: how big is the measurement error x − y/K at <b>t = τ = ${fmt(p.tau)} s</b>?`,
+        ans:a, tol:0.05*a, unit:'units',
+        explain:`eₘ(t) = q̇τ(1 − e<sup>−t/τ</sup>). At t = τ this is 0.632·q̇τ = ${fmt(a)}.`};
+    }
+  }
+}
+function renderQ(note){
+  const q=currentQ.q;
+  $('qText').innerHTML=q.text;
+  $('qUnit').textContent=q.unit;
+  const fb=$('qFb');
+  if(note){ fb.className='fb warn'; fb.innerHTML=note; } else { fb.className='fb'; fb.innerHTML=''; }
+}
+function newQuestion(){
+  const type=pick(QTYPES[mode]);
+  const n = type==='pct' ? pick([0.5,1,2,3,4]) : pick([0.5,1,1.5,2,3]);
+  currentQ={type, n, answered:false, q:makeQ(type, params(), n)};
+  $('qAns').value='';
+  checkPt=null;
+  renderQ();
+  if(mode==='step' && window.Plotly) drawStep(params());
+}
+function checkQ(){
+  const val=parseFloat($('qAns').value);
+  const fb=$('qFb');
+  if(isNaN(val)){ fb.className='fb warn'; fb.innerHTML='Type a number first.'; return; }
+  const q=currentQ.q, ok=Math.abs(val-q.ans)<=q.tol;
+  if(!currentQ.answered){ score.total++; if(ok) score.right++; }
+  currentQ.answered=true;
+  fb.className='fb '+(ok?'ok':'no');
+  fb.innerHTML=(ok?`<b>Good prediction!</b> `:`<b>Not quite.</b> You said ${fmt(val)}${q.unit?' '+q.unit:''}. `)
+    +`Answer: <b>${fmt(q.ans)}${q.unit?' '+q.unit:''}</b>.<br>${q.explain}`
+    +(q.pt?'<br>The purple star on the plot marks this point.':'');
+  $('qScore').textContent=`Score this session: ${score.right} / ${score.total}`;
+  if(q.pt && mode==='step'){ checkPt=q.pt; drawStep(params()); }
+}
+
+/* Info (i) notes */
+const INFO = {
+  controls: () => `<ul>
+    <li><b>K</b> (static sensitivity): where the output ends up. Final value = K × input.</li>
+    <li><b>τ</b> (time constant): how fast it gets there. Bigger τ = slower sensor.</li>
+    <li><b>${mode==='step' ? 'Step size A' : 'Ramp rate q̇'}</b>: ${mode==='step' ? 'how big the sudden change in the input is.' : 'how fast the input keeps rising (units per second).'}</li>
+    ${mode==='step' ? '<li><b>y₀</b>: the reading before the step (e.g. room temperature).</li>' : ''}
+    <li><b>Tea button</b>: loads the thermometer example for the input type you are on.</li></ul>`,
+  plot1: () => mode==='step' ? `<ul>
+    <li>Formula: y(t) = KA + (y₀ − KA)·e<sup>−t/τ</sup></li>
+    <li>At <b>t = τ</b> the reading has covered <b>63.2%</b> of the change; at <b>3τ</b> about <b>95%</b>; at 5τ about 99.3%.</li>
+    <li>The dashed <b>initial slope</b> line reaches the final value exactly at t = τ.</li>
+    <li>The dotted grey line is an <b>ideal</b> sensor that jumps instantly. The gap between them is the dynamic error.</li></ul>`
+  : `<ul>
+    <li>Formula: y(t) = Kq̇(τe<sup>−t/τ</sup> + t − τ)</li>
+    <li>After the start-up transient, y/K runs <b>parallel</b> to the input but <b>τ seconds late</b> (horizontal gap = time lag).</li>
+    <li>The vertical gap is the <b>steady-state error = q̇τ</b>. A faster ramp or a slower sensor makes it bigger.</li></ul>`,
+  plot2: () => mode==='step' ? `<ul>
+    <li>Error fraction: eₘ(t) = (y − KA)/(y₀ − KA) = e<sup>−t/τ</sup>, so ln eₘ = −t/τ.</li>
+    <li>On a <b>log axis</b> this is a <b>straight line with slope −1/τ</b>. A slower sensor (bigger τ) gives a flatter line.</li>
+    <li>To find τ from real data: plot ln eₘ against t, fit a line, take <b>τ = −1/slope</b>.</li>
+    <li>At t = τ the error fraction is e<sup>−1</sup> = 0.368.</li></ul>`
+  : `<ul>
+    <li>Measurement error: eₘ(t) = x(t) − y(t)/K = q̇τ(1 − e<sup>−t/τ</sup>).</li>
+    <li>It starts at 0, reaches 63.2% of q̇τ at t = τ, and settles at the <b>steady-state error q̇τ</b> after about 5τ.</li>
+    <li>Switch to <b>Step</b> to see the error-fraction log plot.</li></ul>`,
+  predict: () => `Guess the answer <b>before</b> touching the sliders, then press <b>Check</b>. The page tells you if you were close (within a few %), explains the answer, and marks the point on the curve with a purple star. Questions change with the input type (Step or Ramp).`,
+  val: () => `The brief asks the page to reproduce numbers from the lecture slides. "Our value" is read from the <b>plotted curve data</b>, not typed in, so a PASS proves the curve is right. It updates live when you move the sliders.`
+};
+function renderTips(){ document.querySelectorAll('.tip.show').forEach(t => { t.innerHTML = INFO[t.id.slice(4)](); }); }
+document.querySelectorAll('.ib').forEach(b => b.addEventListener('click', () => {
+  const t = $('tip-' + b.dataset.k), open = !t.classList.contains('show');
+  t.classList.toggle('show', open); b.classList.toggle('on', open);
+  if(open) t.innerHTML = INFO[b.dataset.k]();
+}));
+
+/* Wiring */
+function labels(p){
+  $('Kv').textContent=fmt(p.K,2);
+  $('tauv').textContent=fmt(p.tau,2)+' s';
+  $('Av').textContent=fmt(p.A,2)+(mode==='ramp'?' /s':'');
+  $('y0v').textContent=fmt(p.y0,0);
+  $('Alabel').firstChild.textContent = mode==='step' ? 'Step size A ' : 'Ramp rate q̇ (units/s) ';
+  $('y0row').style.display = mode==='step' ? '' : 'none';
+}
+function update(){
+  const p=params();
+  labels(p);
+  validate(p);
+  if(!window.Plotly) return;
+  if(mode==='step'){ drawStep(p); drawErrFrac(p); }
+  else { drawRamp(p); drawRampErr(p); }
+}
+function onSlide(){
+  checkPt=null;
+  if(currentQ && !currentQ.answered){
+    currentQ.q=makeQ(currentQ.type, params(), currentQ.n);
+    renderQ('You moved a slider, so the question now uses the new values. Predict first next time!');
+  }
+  update();
+}
+['K','tau','A','y0'].forEach(id => $(id).addEventListener('input', onSlide));
+function setMode(m){
+  mode=m;
+  $('modeStep').classList.toggle('on', m==='step');
+  $('modeRamp').classList.toggle('on', m==='ramp');
+  checkPt=null;
+  update();
+  newQuestion();
+  renderTips();
+}
+$('modeStep').addEventListener('click', () => setMode('step'));
+$('modeRamp').addEventListener('click', () => setMode('ramp'));
+function setVals(v){ Object.entries(v).forEach(([k,x]) => $(k).value=x); }
+$('presetTea').addEventListener('click', () => {
+  if(mode==='step'){
+    setVals({K:1, tau:10, A:80, y0:20});
+    $('presetNote').innerHTML='Loaded (step): room air 20 °C → tea 80 °C, τ = 10 s. After 10 s it reads about 58 °C, after 30 s about 77 °C.';
+  } else {
+    setVals({K:1, tau:10, A:2});
+    $('presetNote').innerHTML='Loaded (ramp): tea heating on the stove at 2 °C/s, τ = 10 s. The thermometer runs 10 s late, so it reads 20 °C too low.';
+  }
+  setMode(mode);
+});
+$('reset').addEventListener('click', () => {
+  setVals({K:1, tau:2, A:10, y0:0});
+  $('presetNote').innerHTML='Tea example: τ = 10 s. Works for both Step and Ramp.';
+  setMode(mode);
+});
+$('qCheck').addEventListener('click', checkQ);
+$('qAns').addEventListener('keydown', e => { if(e.key==='Enter') checkQ(); });
+$('qNew').addEventListener('click', newQuestion);
+
+/* =========================================================
+   Load Plotly from several CDNs, so one blocked CDN
+   does not break the page ("Plotly is not defined")
+   ========================================================= */
+const PLOTLY_SOURCES = [
+  'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.2/plotly.min.js',
+  'https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js',
+  'https://unpkg.com/plotly.js-dist-min@2.35.2/plotly.min.js',
+  'https://cdn.plot.ly/plotly-2.35.2.min.js'
+];
+function loadPlotly(i){
+  if(window.Plotly){ onPlotlyReady(); return; }
+  if(i >= PLOTLY_SOURCES.length){ $('loadErr').style.display='block'; return; }
+  const s=document.createElement('script');
+  s.src=PLOTLY_SOURCES[i];
+  s.onload=() => window.Plotly ? onPlotlyReady() : loadPlotly(i+1);
+  s.onerror=() => loadPlotly(i+1);
+  document.head.appendChild(s);
+}
+function onPlotlyReady(){ update(); newQuestion(); }
+
+route();
+update();
+newQuestion();
+loadPlotly(0);
+</script>
+</body>
+</html>
