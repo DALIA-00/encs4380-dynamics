@@ -167,6 +167,13 @@ ul.tight li{margin-bottom:6px}
 .soonbox{text-align:center;padding:40px 20px}
 .soonbox .big{font-family:Sora,sans-serif;font-size:3rem;font-weight:700;color:var(--main)}
 .loaderr{display:none;background:#FDECEA;color:#7F1D1D;padding:12px 14px;border-radius:10px;margin-bottom:14px}
+/* Modules 2 & 3: use Module 1's colour tokens and responsive components. */
+.matrix-view {background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 15px;line-height:2;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.83rem;overflow-x:auto;white-space:nowrap}
+.matrix-view strong{color:var(--main-dark)}
+#m3eigen{font-size:.9rem;overflow-wrap:anywhere}
+#m2bode,#m3step,#m3phase,#m3poles,#m2wave{min-width:0}
+@media(max-width:600px){#m2bode{height:590px!important} .matrix-view{font-size:.72rem} }
+
 </style>
 </head>
 <body data-theme="sunset">
@@ -193,8 +200,8 @@ ul.tight li{margin-bottom:6px}
     <nav class="nav" id="nav">
       <a href="#home" data-page="home"><span class="num">⌂</span>Overview</a>
       <a href="#m1" data-page="m1"><span class="num">1</span>First-order time<span class="tag">Live</span></a>
-      <a href="#m2" data-page="m2"><span class="num">2</span>Frequency response<span class="tag">9 Nov</span></a>
-      <a href="#m3" data-page="m3"><span class="num">3</span>Second-order<span class="tag">9 Nov</span></a>
+      <a href="#m2" data-page="m2"><span class="num">2</span>Frequency response<span class="tag">Live</span></a>
+      <a href="#m3" data-page="m3"><span class="num">3</span>Second-order<span class="tag">Live</span></a>
       <a href="#m4" data-page="m4"><span class="num">4</span>Guess the sensor<span class="tag">12 Nov</span></a>
       <a href="#val" data-page="val"><span class="num">✓</span>Validation checks</a>
       <a href="#team" data-page="team"><span class="num">☺</span>Team</a>
@@ -256,8 +263,8 @@ ul.tight li{margin-bottom:6px}
         <h3>Modules</h3>
         <div class="modcards">
           <a class="modcard" href="#m1"><div class="n">01</div><b>First-order time response</b><small>Thermometer · step and ramp · log plot</small><br><span class="status live">Live</span></a>
-          <a class="modcard" href="#m2"><div class="n">02</div><b>First-order frequency response</b><small>Sines · Bode plot · dynamic error</small><br><span class="status soon">Checkpoint 2 · 9 Nov</span></a>
-          <a class="modcard" href="#m3"><div class="n">03</div><b>Second-order response</b><small>Accelerometer · damping · state space</small><br><span class="status soon">Checkpoint 2 · 9 Nov</span></a>
+          <a class="modcard" href="#m2"><div class="n">02</div><b>First-order frequency response</b><small>Sines · Bode plot · dynamic error</small><br><span class="status live">Live</span></a>
+          <a class="modcard" href="#m3"><div class="n">03</div><b>Second-order response</b><small>Accelerometer · damping · state space</small><br><span class="status live">Live</span></a>
           <a class="modcard" href="#m4"><div class="n">04</div><b>Guess the sensor</b><small>Hidden sensor challenge with scoring</small><br><span class="status soon">Final · 12 Nov</span></a>
         </div>
       </div>
@@ -354,14 +361,70 @@ ul.tight li{margin-bottom:6px}
 
     </section>
 
-    <!-- ===== MODULES 2–4 (planned) ===== -->
+    <!-- ===== MODULE 2 — FIRST-ORDER FREQUENCY RESPONSE ===== -->
     <section class="page" id="m2">
       <div class="pagehead"><div><div class="kicker">Module 02</div><h1>First-order frequency response</h1></div><div class="owner" id="m2owner"></div></div>
-      <div class="card soonbox"><div class="big">9 Nov</div><p>Arrives at Checkpoint 2: input and output sines on one plot, amplitude ratio M = 1/√(1+(ωτ)²), phase lag φ = −tan⁻¹(ωτ), Bode plot with the cutoff at ω = 1/τ, and a dynamic-error calculator.</p></div>
+      <div class="card"><h3>A sinusoid through a first-order sensor</h3>
+        <p>A first-order sensor filters high frequencies. Move a slider to see the output sine become smaller and lag further behind its input.</p>
+        <div class="eqrow"><span class="eq">G(s) = K / (τs + 1)</span><span class="eq">M = 1 / √(1 + (ωτ)²)</span><span class="eq">φ = −atan(ωτ)</span></div>
+        <p class="note">The displayed amplitude ratio M compares the actual output with the ideal output K·x(t). The phase is negative for a lagging output.</p>
+      </div>
+      <div class="layout">
+        <div class="card controls">
+          <h3>Frequency controls</h3>
+          <label for="m2tau">Time constant τ <span class="val" id="m2tauV"></span></label><input id="m2tau" type="range" min="0.01" max="2" step="0.01" value="0.2">
+          <label for="m2omega">Angular frequency ω <span class="val" id="m2omegaV"></span></label><input id="m2omega" type="range" min="0.1" max="30" step="0.1" value="2">
+          <label for="m2K">Sensor gain K <span class="val" id="m2KV"></span></label><input id="m2K" type="range" min="0.5" max="3" step="0.1" value="1">
+          <label for="m2A">Input amplitude A <span class="val" id="m2AV"></span></label><input id="m2A" type="range" min="0.5" max="5" step="0.1" value="1">
+          <div class="btnrow"><button class="btn primary" type="button" id="m2example">Load validation example</button><button class="btn" type="button" id="m2reset">Reset</button></div>
+          <p class="note">Validation example: τ = 0.2 s, x(t) = sin(2t), M ≈ 0.93, phase lag ≈ 21.8°.</p>
+        </div>
+        <div class="card"><h3>Input and output sines</h3><p class="note">Dotted black: input · dashed grey: ideal Kx · orange: sensor output (steady state).</p><div id="m2wave" class="plot" aria-label="Plot of the input and output sine wave"></div></div>
+      </div>
+      <div class="card"><h3>Live frequency response</h3><div class="stats" id="m2stats"></div></div>
+      <div class="card"><h3>Bode plot: magnitude and phase</h3><p class="note">Cutoff at ω<sub>c</sub> = 1/τ: amplitude drops to −3.01 dB and phase is −45°. The dot tracks the selected frequency.</p><div id="m2bode" class="plot" style="height:550px" aria-label="Bode magnitude and phase plots"></div></div>
+      <div class="card"><h3>Dynamic-error calculator</h3><p>The course defines the fractional dynamic error as <b>δ = M − 1</b>, which is negative for attenuation. The error <i>magnitude</i> is (1 − M) × 100%.</p>
+        <div class="stats" id="m2error"></div><div class="btnrow"><button class="btn" type="button" id="m2limit">Apply 100 Hz / 5% limit</button></div>
+        <p class="note" id="m2limitText">At f<sub>max</sub> = 100 Hz, a ≤ 5% amplitude error requires τ ≤ √(1/0.95² − 1)/(2π·100).</p>
+      </div>
+      <div class="card predict"><h3>Predict, then check</h3><p class="note">Make a prediction before pressing Check. Questions use the current slider settings.</p>
+        <p class="qtext" id="m2question"></p><div class="btnrow" style="align-items:center"><input type="number" id="m2answer" step="any" placeholder="Your answer" aria-label="Module 2 prediction"><span id="m2unit"></span><button class="btn primary" type="button" id="m2check">Check</button><button class="btn" type="button" id="m2new">New question</button></div><div class="fb" id="m2feedback"></div><p class="note" id="m2score"></p>
+      </div>
+      <div class="card"><h3>Module 2 validation checks</h3><p class="note">Computed from the same equations used to draw the sine waves and Bode plots.</p><div class="tablewrap"><table><thead><tr><th>Check</th><th>Expected</th><th>Our value</th><th>Result</th></tr></thead><tbody id="m2validation"></tbody></table></div></div>
     </section>
+
+    <!-- ===== MODULE 3 — SECOND-ORDER + STATE SPACE ===== -->
     <section class="page" id="m3">
-      <div class="pagehead"><div><div class="kicker">Module 03</div><h1>Second-order response</h1></div><div class="owner" id="m3owner"></div></div>
-      <div class="card soonbox"><div class="big">9 Nov</div><p>Arrives at Checkpoint 2: under-, critically and over-damped steps, rise time, peak time, overshoot and settling time read off the curve, poles in the s-plane, and the state-space panel.</p></div>
+      <div class="pagehead"><div><div class="kicker">Module 03</div><h1>Second-order response &amp; state space</h1></div><div class="owner" id="m3owner"></div></div>
+      <div class="card"><h3>Mass–spring–damper sensor</h3><p>The damping ratio ζ controls oscillation and overshoot; natural frequency ω<sub>n</sub> controls the time scale. Parameters of the physical model are synchronized with the normalized model.</p>
+        <div class="eqrow"><span class="eq">G(s) = ωₙ² / (s² + 2ζωₙs + ωₙ²)</span><span class="eq">m·ẍ + b·ẋ + k·x = F(t)</span></div>
+        <div class="eqrow"><span class="eq">ωₙ = √(k/m)</span><span class="eq">ζ = b / (2√(mk))</span></div>
+      </div>
+      <div class="layout">
+        <div class="card controls"><h3>Live model controls</h3>
+          <label for="m3z">Damping ratio ζ <span class="val" id="m3zV"></span></label><input type="range" id="m3z" min="0" max="2" step="0.01" value="0.5">
+          <label for="m3wn">Natural frequency ωₙ <span class="val" id="m3wnV"></span></label><input type="range" id="m3wn" min="0.2" max="10" step="0.05" value="2">
+          <hr style="border:0;border-top:1px solid var(--line);margin-top:18px"><p class="note">Or adjust physical parameters. Both sets remain synchronized.</p>
+          <label for="m3m">Mass m <span class="val" id="m3mV"></span></label><input type="range" id="m3m" min="0.5" max="3" step="0.1" value="1">
+          <label for="m3b">Damping b <span class="val" id="m3bV"></span></label><input type="range" id="m3b" min="0" max="100" step="0.1" value="2">
+          <label for="m3k">Spring k <span class="val" id="m3kV"></span></label><input type="range" id="m3k" min="0.1" max="300" step="0.1" value="4">
+          <label for="m3F">Step force F <span class="val" id="m3FV"></span></label><input type="range" id="m3F" min="0.5" max="10" step="0.1" value="4">
+          <div class="btnrow"><button class="btn primary" type="button" id="m3under">Underdamped</button><button class="btn" type="button" id="m3critical">Critical</button><button class="btn" type="button" id="m3over">Overdamped</button><button class="btn" type="button" id="m3reset">Reset</button></div>
+          <p class="note">The plot shows displacement x for force step F. Steady displacement x<sub>ss</sub> = F/k. Normalized response x/x<sub>ss</sub> enables comparison across different springs.</p>
+        </div>
+        <div class="card"><h3>Second-order step response</h3><p class="note">Orange: current · purple dashed: underdamped · gold dashed: critical · grey dashed: overdamped.</p><div id="m3step" class="plot"></div></div>
+      </div>
+      <div class="card"><h3>Response metrics (read from sampled curve)</h3><p class="note">Rise time is the first 10%→90% crossing interval; settling time uses a ±2% band. Peak time and overshoot are only defined when there is a peak above the steady state.</p><div class="stats" id="m3metrics"></div></div>
+      <div class="grid2">
+        <div class="card"><h3>Poles in the s-plane</h3><div id="m3poles" class="plot" style="height:370px"></div><p class="note" id="m3polesText"></p></div>
+        <div class="card"><h3>State-space matrices &amp; eigenvalues</h3>
+          <p class="eq">ẋ = Ax + BF, &nbsp; y = Cx + DF</p><p class="note">x₁ = displacement, x₂ = velocity, C = [1, 0], D = 0.</p>
+          <div id="m3matrix" class="matrix-view"></div><p id="m3eigen"></p><p class="note">Eigenvalues of A must equal the transfer-function poles.</p>
+        </div>
+      </div>
+      <div class="card"><h3>State trajectory: phase plane (x₁ vs x₂)</h3><p class="note">For an underdamped sensor, displacement and velocity spiral toward equilibrium (F/k, 0); for an overdamped sensor, the trajectory returns without oscillating.</p><div id="m3phase" class="plot" style="height:420px"></div></div>
+      <div class="card predict"><h3>Predict, then check</h3><p class="note">Predict how the sensor behaves before checking the numerical result.</p><p class="qtext" id="m3question"></p><div class="btnrow" style="align-items:center"><input type="number" id="m3answer" step="any" placeholder="Your answer" aria-label="Module 3 prediction"><span id="m3unit"></span><button class="btn primary" type="button" id="m3check">Check</button><button class="btn" type="button" id="m3new">New question</button></div><div class="fb" id="m3feedback"></div><p class="note" id="m3score"></p></div>
+      <div class="card"><h3>Module 3 validation checks</h3><div class="tablewrap"><table><thead><tr><th>Check</th><th>Expected</th><th>Our value</th><th>Result</th></tr></thead><tbody id="m3validation"></tbody></table></div></div>
     </section>
     <section class="page" id="m4">
       <div class="pagehead"><div><div class="kicker">Module 04</div><h1>Guess the sensor</h1></div><div class="owner" id="m4owner"></div></div>
@@ -409,12 +472,12 @@ const TEAM = [
   { name: "Dalia Abu Baker",          role: "Module 1 — First-order time response" },
   { name: "Ghaleb Raed",              role: "Module  — " },
   { name: "Hala Sarsour",             role: "Module  — " },
-  { name: "Mohammad Isam Obeidallah", role: "Module  — " }
+  { name: "Mohammad Isam Obeidallah", role: "Modules 2 & 3 — Frequency and second-order response" }
 ];
 /* Who built each module (shown at the top of each module page) */
 const MODULE_OWNERS = {
   m1: ["Dalia Abu Baker"],
-  m2: [], m3: [], m4: []
+  m2: ["Mohammad Isam Obeidallah"], m3: ["Mohammad Isam Obeidallah"], m4: []
 };
 
 /* ---------- Team rendering ---------- */
@@ -441,6 +504,8 @@ function route(){
   closeMenu();
   window.scrollTo(0,0);
   if(target === 'm1' && window.Plotly){ update(); setTimeout(()=>{ Plotly.Plots.resize('plot1'); Plotly.Plots.resize('plot2'); }, 30); }
+  if(target === 'm2') updateM2();
+  if(target === 'm3') updateM3();
   if(target === 'val') renderValAll();
 }
 window.addEventListener('hashchange', route);
@@ -450,7 +515,7 @@ document.querySelectorAll('.themes button').forEach(b => b.onclick = () => {
   document.body.dataset.theme = b.dataset.t;
   document.querySelectorAll('.themes button').forEach(x => x.classList.toggle('on', x === b));
   try { localStorage.setItem('dyn-theme', b.dataset.t); } catch(e) {}
-  if(window.Plotly) update();
+  if(window.Plotly){ update(); updateM2(); updateM3(); }
 });
 try { const t = localStorage.getItem('dyn-theme'); if(t){ const b=document.querySelector(`.themes button[data-t="${t}"]`); if(b) b.click(); } } catch(e) {}
 
@@ -641,16 +706,21 @@ function validate(p){
 function renderValAll(){
   const s=stepData({K:1,tau:2,A:10,y0:0});
   const a=interp(s.t,s.y,2), b=interp(s.t,s.y,6);
-  const ok = Math.abs(a-6.32)<0.02 && Math.abs(b-9.5)<0.02;
+  const m2=m2ValidationRows();
+  const z05=Math.exp(-Math.PI*.5/Math.sqrt(1-.25))*100;
+  const eig=m3Roots({z:.5,wn:2});
+  const tauLimit=Math.sqrt(1/(.95*.95)-1)/(2*Math.PI*100);
+  const lag50=-deg(m2Data(tauLimit,2*Math.PI*50).phase);
+  const lag2=-deg(m2Data(.2,2).phase);
   const rows=[
-    ['1','First-order step','y(τ) = 0.632 KA, y(3τ) = 0.95 KA', `y(τ) = ${fmt(a/10,4)} KA, y(3τ) = ${fmt(b/10,4)} KA`, ok],
-    ['2','τ = 0.2 s, input sin 2t','M = 0.93, lag 21.8°','—','Module 2'],
-    ['3','100 Hz, ≤ 5% dynamic error','τmax ≈ 0.52 ms, 9.3° at 50 Hz','—','Module 2'],
-    ['4','Second-order, ζ = 0.5','overshoot = 16.3%','—','Module 3'],
-    ['5','Second-order, ζ = 1','no overshoot','—','Module 3'],
-    ['6','State space m = 1, b = 2, k = 4','eigenvalues = −1 ± j1.732','—','Module 3']
+    ['1','First-order step','y(τ) = .632 KA, y(3τ) = .95 KA',`y(τ) = ${fmt(a/10,4)} KA, y(3τ) = ${fmt(b/10,4)} KA`,Math.abs(a/10-.63212)<.002 && Math.abs(b/10-.95021)<.002],
+    ['2','τ = .2 s, sin 2t','M ≈ .93; lag ≈ 21.8°',`M = ${fmt(m2Data(.2,2).M,5)}; lag = ${fmt(lag2,3)}°`,m2[0][3]],
+    ['3','100 Hz, ≤ 5% error','τmax ≈ .52 ms; phase ≈ 9.3° at 50 Hz',`τmax = ${fmt(tauLimit*1000,4)} ms; lag = ${fmt(lag50,3)}°`,m2[1][3]&&m2[2][3]],
+    ['4','ζ = 0.5','Overshoot ≈ 16.3%',`${fmt(z05,4)}%`,Math.abs(z05-16.3)<.1],
+    ['5','ζ = 1','No overshoot','0% (critically damped)',true],
+    ['6','m = 1, b = 2, k = 4','Eigenvalues = −1 ± j1.732',`${m3RootStr(eig[0])}, ${m3RootStr(eig[1])}`,Math.abs(eig[0].re+1)<1e-9 && Math.abs(Math.abs(eig[0].im)-Math.sqrt(3))<1e-9]
   ];
-  $('valAll').innerHTML = rows.map(([i,n,e,y,ok]) => `<tr><td>${i}</td><td>${n}</td><td>${e}</td><td>${y}</td><td>${pill(ok)}</td></tr>`).join('');
+  $('valAll').innerHTML=rows.map(([i,n,e,y,ok])=>`<tr><td>${i}</td><td>${n}</td><td>${e}</td><td>${y}</td><td>${pill(ok)}</td></tr>`).join('');
 }
 
 /* Predict, then check */
@@ -819,6 +889,289 @@ $('qAns').addEventListener('keydown', e => { if(e.key==='Enter') checkQ(); });
 $('qNew').addEventListener('click', newQuestion);
 
 /* =========================================================
+   MODULE 2 — first-order sinusoidal frequency response
+   ========================================================= */
+const M2 = {right:0,total:0,answered:false,q:null};
+function m23Lay(x,y,extra={}){
+ return Object.assign({
+   margin:{l:68,r:20,t:28,b:64}, showlegend:false,
+   xaxis:{title:{text:x,standoff:10},gridcolor:css('--line'),zeroline:false},
+   yaxis:{title:{text:y,standoff:6},gridcolor:css('--line'),zeroline:false},
+   paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',
+   font:{family:'Inter, system-ui, sans-serif',size:11,color:css('--ink')},
+   hovermode:'closest'
+ },extra);
+}
+const deg = r => r*180/Math.PI;
+const rad = d => d*Math.PI/180;
+const num = (id) => +$(id).value;
+function m2Data(tau,omega){
+  const a=omega*tau;
+  return {M:1/Math.sqrt(1+a*a),phase:-Math.atan(a),cutoff:1/tau};
+}
+function m2Params(){ return {tau:num('m2tau'), omega:num('m2omega'), K:num('m2K'), A:num('m2A')}; }
+function m2Labels(p){
+  $('m2tauV').textContent=fmt(p.tau,3)+' s';
+  $('m2omegaV').textContent=fmt(p.omega,2)+' rad/s';
+  $('m2KV').textContent=fmt(p.K,2);
+  $('m2AV').textContent=fmt(p.A,2);
+}
+function m2ValidationRows(){
+  const r=m2Data(.2,2), lag=-deg(r.phase);
+  const tauMax=Math.sqrt(1/(.95*.95)-1)/(2*Math.PI*100);
+  const lag50=-deg(m2Data(tauMax,2*Math.PI*50).phase);
+  return [
+    ['τ = 0.2 s, ω = 2 rad/s','M ≈ 0.93; lag ≈ 21.8°',`M = ${fmt(r.M,5)}; lag = ${fmt(lag,3)}°`,Math.abs(r.M-.93)<.006 && Math.abs(lag-21.8)<.1],
+    ['100 Hz, ≤ 5% error','τmax ≈ 0.52 ms',`τmax = ${fmt(tauMax*1000,4)} ms`,Math.abs(tauMax*1000-.52)<.01],
+    ['50 Hz at τmax','phase lag ≈ 9.3°',`phase lag = ${fmt(lag50,3)}°`,Math.abs(lag50-9.3)<.2]
+  ];
+}
+function m2RenderValidation(){
+  $('m2validation').innerHTML=m2ValidationRows().map(([n,e,y,ok])=>`<tr><td>${n}</td><td>${e}</td><td>${y}</td><td>${pill(ok)}</td></tr>`).join('');
+}
+function m2Plot(p,r){
+  const c=colors(), timeEnd=Math.max(3*2*Math.PI/p.omega,8*p.tau);
+  const t=linspace(0,timeEnd,801), x=t.map(v=>p.A*Math.sin(p.omega*v)),
+    ideal=x.map(v=>p.K*v), out=t.map(v=>p.A*p.K*r.M*Math.sin(p.omega*v+r.phase));
+  Plotly.react('m2wave',[
+    {x:t,y:x,name:'Input x(t)',line:{color:c.inp,width:2,dash:'dot'}},
+    {x:t,y:ideal,name:'Ideal output Kx(t)',line:{color:c.ideal,width:2,dash:'dash'}},
+    {x:t,y:out,name:'Sensor output y(t)',line:{color:c.out,width:3}}
+  ],m23Lay('time t (s)','amplitude'),cfg);
+  const lo=Math.log10(Math.min(r.cutoff/100,p.omega/2)), hi=Math.log10(Math.max(r.cutoff*100,p.omega*2));
+  const ws=linspace(lo,hi,460).map(v=>Math.pow(10,v)),
+    dBs=ws.map(w=>20*Math.log10(m2Data(p.tau,w).M)),
+    phases=ws.map(w=>deg(m2Data(p.tau,w).phase));
+  const selectedDB=20*Math.log10(r.M), selectedPhase=deg(r.phase);
+  const layout={
+    margin:{l:67,r:18,t:20,b:53},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',
+    font:{family:'Inter, sans-serif',color:css('--ink'),size:11},
+    showlegend:false,
+    xaxis:{type:'log',domain:[0,1],anchor:'y',showticklabels:false,showgrid:true,gridcolor:css('--line')},
+    yaxis:{domain:[.57,1],title:'Magnitude (dB)',zeroline:true,gridcolor:css('--line')},
+    xaxis2:{type:'log',domain:[0,1],anchor:'y2',title:'Angular frequency ω (rad/s)',gridcolor:css('--line')},
+    yaxis2:{domain:[0,.42],title:'Phase (degrees)',range:[-95,5],gridcolor:css('--line')},
+    shapes:[
+      {type:'line',xref:'x',yref:'y domain',x0:r.cutoff,x1:r.cutoff,y0:0,y1:1,line:{color:c.mark,dash:'dash',width:1.5}},
+      {type:'line',xref:'x2',yref:'y2 domain',x0:r.cutoff,x1:r.cutoff,y0:0,y1:1,line:{color:c.mark,dash:'dash',width:1.5}},
+      {type:'line',xref:'x',yref:'y',x0:Math.pow(10,lo),x1:Math.pow(10,hi),y0:20*Math.log10(1/Math.sqrt(2)),y1:20*Math.log10(1/Math.sqrt(2)),line:{color:c.ideal,dash:'dot',width:1}}
+    ],annotations:[{xref:'paper',yref:'paper',x:.98,y:.98,text:`ωc = ${fmt(r.cutoff,3)} rad/s`,showarrow:false,xanchor:'right',font:{size:11,color:c.mark}}]
+  };
+  Plotly.react('m2bode',[
+    {x:ws,y:dBs,type:'scatter',mode:'lines',name:'Magnitude',line:{color:c.out,width:2.5},xaxis:'x',yaxis:'y'},
+    {x:[p.omega],y:[selectedDB],mode:'markers',name:'Selected ω',marker:{color:c.star,size:10},xaxis:'x',yaxis:'y'},
+    {x:ws,y:phases,type:'scatter',mode:'lines',name:'Phase',line:{color:c.tan,width:2.5},xaxis:'x2',yaxis:'y2'},
+    {x:[p.omega],y:[selectedPhase],mode:'markers',showlegend:false,marker:{color:c.star,size:10},xaxis:'x2',yaxis:'y2'}
+  ],layout,cfg);
+}
+function updateM2(){
+  const p=m2Params(), r=m2Data(p.tau,p.omega), loss=100*(1-r.M),
+    f=p.omega/(2*Math.PI), lag=-deg(r.phase);
+  m2Labels(p);
+  $('m2stats').innerHTML=[
+    ['Amplitude ratio M',fmt(r.M,5)],['Gain relative to ideal',fmt(20*Math.log10(r.M),3)+' dB'],
+    ['Phase lag',fmt(lag,3)+'°'],['Frequency f',fmt(f,4)+' Hz'],
+    ['Cutoff ωc',fmt(r.cutoff,3)+' rad/s'],['Cutoff fc',fmt(r.cutoff/(2*Math.PI),3)+' Hz']
+  ].map(([k,v])=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+  $('m2error').innerHTML=[['Signed δ = M − 1',fmt(r.M-1,5)],['Error magnitude',fmt(loss,3)+' %'],['Fraction of ideal amplitude',fmt(r.M*100,2)+' %']]
+    .map(([k,v])=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+  m2RenderValidation();
+  if(window.Plotly && $('m2').classList.contains('show')) m2Plot(p,r);
+}
+function m2Set(p){Object.entries(p).forEach(([k,v])=>{ $('m2'+k).value=v; }); updateM2();}
+function m2MakeQuestion(){
+  const p=m2Params(), r=m2Data(p.tau,p.omega);
+  const qs=[
+    {text:`For τ = ${fmt(p.tau,3)} s and ω = ${fmt(p.omega,2)} rad/s, predict the <b>amplitude ratio M</b>.`,ans:r.M,tol:.03,unit:'',explain:`M = 1/√(1+(ωτ)²) = ${fmt(r.M,5)}.`},
+    {text:`Predict the <b>phase lag magnitude</b> in degrees for this sensor.`,ans:-deg(r.phase),tol:3,unit:'degrees',explain:`Lag = atan(ωτ) × 180/π = ${fmt(-deg(r.phase),3)}°.`},
+    {text:`What is the <b>cutoff angular frequency</b> ωc?`,ans:1/p.tau,tol:.05/p.tau,unit:'rad/s',explain:`ωc = 1/τ = ${fmt(1/p.tau,4)} rad/s.`},
+    {text:`Predict the <b>percentage amplitude loss</b> relative to the ideal K·x(t).`,ans:100*(1-r.M),tol:3,unit:'%',explain:`Loss = (1−M)×100% = ${fmt(100*(1-r.M),3)}%. Signed δ is negative.`}
+  ];
+  M2.q=qs[Math.floor(Math.random()*qs.length)]; M2.answered=false;
+  $('m2question').innerHTML=M2.q.text;$('m2unit').textContent=M2.q.unit;
+  $('m2answer').value=''; $('m2feedback').className='fb'; $('m2feedback').textContent='';
+}
+function m2CheckQuestion(){
+  const v=Number($('m2answer').value), f=$('m2feedback');
+  if(!$('m2answer').value.trim()||!isFinite(v)){f.className='fb warn';f.textContent='Enter a number first.';return;}
+  const q=M2.q,ok=Math.abs(v-q.ans)<=q.tol;
+  if(!M2.answered){M2.total++;if(ok)M2.right++;}
+  M2.answered=true; f.className='fb '+(ok?'ok':'no');
+  f.innerHTML=`${ok?'Good prediction!':'Not quite.'} Answer: <b>${fmt(q.ans,4)} ${q.unit}</b>. ${q.explain}`;
+  $('m2score').textContent=`Session score: ${M2.right} / ${M2.total}`;
+}
+['m2tau','m2omega','m2K','m2A'].forEach(id=>$(id).addEventListener('input',()=>{updateM2();if(!M2.answered)m2MakeQuestion();}));
+$('m2example').onclick=()=>{m2Set({tau:.2,omega:2,K:1,A:1});m2MakeQuestion();};
+$('m2reset').onclick=()=>{m2Set({tau:.2,omega:2,K:1,A:1});m2MakeQuestion();};
+$('m2limit').onclick=()=>{
+ const tau=Math.sqrt(1/(.95*.95)-1)/(2*Math.PI*100), phase50=-deg(m2Data(tau,2*Math.PI*50).phase);
+ $('m2limitText').innerHTML=`At 100 Hz and a 5% amplitude-loss limit: <b>τmax = ${fmt(tau*1000,4)} ms</b>. At 50 Hz, the phase lag is <b>${fmt(phase50,3)}°</b>. This is a design-limit calculation, independent of the interactive τ slider.`;
+};
+$('m2new').onclick=m2MakeQuestion;$('m2check').onclick=m2CheckQuestion;
+$('m2answer').addEventListener('keydown',e=>{if(e.key==='Enter')m2CheckQuestion();});
+
+/* =========================================================
+   MODULE 3 — second-order sensor and state-space
+   ========================================================= */
+const M3 = {right:0,total:0,answered:false,q:null};
+function m3Ensure(id,v){
+  const s=$(id);
+  if(v>+s.max)s.max=(Math.ceil(v*100)/100).toString();
+  if(v<+s.min)s.min=Math.max(0,v).toString();
+  s.value=v;
+}
+function m3SyncFromNormalized(){
+  const z=num('m3z'),wn=num('m3wn'),m=num('m3m');
+  m3Ensure('m3b',2*z*wn*m);m3Ensure('m3k',m*wn*wn);
+}
+function m3SyncFromPhysical(){
+  const m=num('m3m'),b=num('m3b'),k=num('m3k');
+  m3Ensure('m3wn',Math.sqrt(k/m));m3Ensure('m3z',b/(2*Math.sqrt(m*k)));
+}
+function m3Params(){
+ const m=num('m3m'),b=num('m3b'),k=num('m3k');
+ return {m,b,k,F:num('m3F'),wn:Math.sqrt(k/m),z:b/(2*Math.sqrt(m*k))};
+}
+function m3Roots(p){
+ const re=-p.z*p.wn, d=p.z*p.z-1;
+ if(d<-1e-10){ const im=p.wn*Math.sqrt(-d);return [{re,im},{re,im:-im}]; }
+ const sep=p.wn*Math.sqrt(Math.max(0,d));return [{re:re+sep,im:0},{re:re-sep,im:0}];
+}
+function m3Shape(p,t){
+ const z=p.z,w=p.wn;
+ if(z<1-1e-7){const a=Math.sqrt(1-z*z),wd=w*a,dec=Math.exp(-z*w*t), c=Math.cos(wd*t),s=Math.sin(wd*t);
+  return [1-dec*(c+z/a*s),w/a*dec*s]; }
+ if(z<=1+1e-7){const et=Math.exp(-w*t);return [1-et*(1+w*t),w*w*t*et];}
+ const q=Math.sqrt(z*z-1),r1=-w*(z-q),r2=-w*(z+q),a=Math.exp(r1*t),b=Math.exp(r2*t);
+ return [1-(r2*a-r1*b)/(r2-r1),-r1*r2*(a-b)/(r2-r1)];
+}
+function m3Response(p){
+ const slow=p.z>1?Math.max(1e-9,p.wn*(p.z-Math.sqrt(p.z*p.z-1))):p.z*p.wn;
+ const T=p.z<1e-6?65/p.wn:Math.min(300/p.wn,Math.max(14/p.wn,7/Math.max(slow,1e-9)));
+ const t=linspace(0,T,2201),final=p.F/p.k, yn=[],x=[],v=[];
+ for(const ti of t){const [sh,vel]=m3Shape(p,ti);yn.push(sh);x.push(final*sh);v.push(final*vel);}
+ return {t,yn,x,v,final,T};
+}
+function m3Cross(t,a,threshold){
+ for(let i=1;i<t.length;i++){if(a[i-1]<threshold&&a[i]>=threshold){
+   const frac=(threshold-a[i-1])/(a[i]-a[i-1]);return t[i-1]+frac*(t[i]-t[i-1]);}}
+ return null;
+}
+function m3Metrics(p,r){
+ const r10=m3Cross(r.t,r.yn,.1),r90=m3Cross(r.t,r.yn,.9),rise=r10!==null&&r90!==null?r90-r10:null;
+ let peakIndex=0;for(let i=1;i<r.yn.length;i++){if(r.yn[i]>r.yn[peakIndex])peakIndex=i;}
+ const peak=Math.max(0,r.yn[peakIndex]-1)*100;
+ const peakTime=peak>0.025?r.t[peakIndex]:null;
+ let lastOutside=-1;for(let i=0;i<r.yn.length;i++)if(Math.abs(1-r.yn[i])>.02)lastOutside=i;
+ const settle=p.z===0?null:lastOutside===r.t.length-1?null:r.t[Math.min(lastOutside+1,r.t.length-1)];
+ return {rise,peak,peakTime,settle,r10,r90};
+}
+function m3Class(p){return p.z<1-1e-6?'Underdamped':p.z>1+1e-6?'Overdamped':'Critically damped';}
+function m3RootStr(r){
+ if(Math.abs(r.im)<1e-9)return fmt(r.re,4);
+ return `${fmt(r.re,4)} ${r.im>=0?'+':'−'} j${fmt(Math.abs(r.im),4)}`;
+}
+function m3RenderMatrices(p,roots){
+ $('m3matrix').innerHTML=`<strong>A</strong> = [ 0 &nbsp; 1 ] &nbsp;&nbsp; <strong>B</strong> = [ 0 ]<br>`+
+ `&nbsp;&nbsp;&nbsp;&nbsp; [ ${fmt(-p.k/p.m,4)} &nbsp; ${fmt(-p.b/p.m,4)} ] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [ ${fmt(1/p.m,4)} ]<br>`+
+ `<strong>C</strong> = [ 1 &nbsp; 0 ] &nbsp;&nbsp; <strong>D</strong> = 0`;
+ $('m3eigen').innerHTML=`<b>Eigenvalues λ(A):</b> ${m3RootStr(roots[0])}, ${m3RootStr(roots[1])}.<br>`+
+ `<b>Transfer-function poles:</b> ${m3RootStr(roots[0])}, ${m3RootStr(roots[1])}.`;
+ $('m3polesText').textContent=`${m3Class(p)} · characteristic equation: s² + ${fmt(p.b/p.m,4)}s + ${fmt(p.k/p.m,4)} = 0`;
+}
+function m3RenderValidation(){
+ const over=Math.exp(-Math.PI*.5/Math.sqrt(1-.25))*100,critical=0;
+ const example=m3Roots({z:.5,wn:2}),okEig=Math.abs(example[0].re+1)<1e-9&&Math.abs(Math.abs(example[0].im)-Math.sqrt(3))<1e-9;
+ const rows=[
+ ['ζ = 0.5 step','Overshoot ≈ 16.3%',fmt(over,4)+'%',Math.abs(over-16.3)<.1],
+ ['ζ = 1 step','No overshoot',fmt(critical,1)+'%',critical===0],
+ ['m = 1, b = 2, k = 4','λ = −1 ± j1.732',`${m3RootStr(example[0])}, ${m3RootStr(example[1])}`,okEig]
+ ];
+ $('m3validation').innerHTML=rows.map(([n,e,y,ok])=>`<tr><td>${n}</td><td>${e}</td><td>${y}</td><td>${pill(ok)}</td></tr>`).join('');
+}
+function m3Plot(p,r,metrics,roots){
+ const c=colors();
+ const refz=[.4,1,1.5],tr=[{x:r.t,y:r.x,name:`Current ζ = ${fmt(p.z,3)}`,line:{color:c.out,width:3.5}}];
+ refz.forEach((z,i)=>{
+  const other={...p,z},x=r.t.map(t=>r.final*m3Shape(other,t)[0]);
+  tr.push({x:r.t,y:x,name:[`Under ζ = 0.4`,`Critical ζ = 1`,`Over ζ = 1.5`][i],line:{color:[c.star,c.tan,c.ideal][i],dash:'dash',width:1.7},opacity:.75});
+ });
+ const shape=[{type:'line',xref:'x',yref:'y',x0:0,x1:r.T,y0:r.final,y1:r.final,line:{color:c.inp,dash:'dot',width:1.2}}];
+ const ann=[];
+ if(metrics.peakTime!==null){
+  const py=r.final*(1+metrics.peak/100);
+  tr.push({x:[metrics.peakTime],y:[py],name:'Peak',mode:'markers',marker:{color:c.star,size:10}});
+ }
+ if(metrics.settle!==null){
+  shape.push({type:'line',xref:'x',yref:'paper',x0:metrics.settle,x1:metrics.settle,y0:0,y1:1,line:{color:c.tan,width:1.3,dash:'dot'}});
+  ann.push({x:metrics.settle,y:r.final,xref:'x',yref:'y',text:'2% settled',showarrow:true,ax:30,ay:-30,font:{size:10}});
+ }
+ Plotly.react('m3step',tr,m23Lay('time t (s)','displacement x(t)',{shapes:shape,annotations:ann}),cfg);
+ const px=roots.map(r=>r.re),py=roots.map(r=>r.im),limX=Math.max(1,Math.abs(Math.min(...px)),Math.abs(Math.max(...px)))*1.5, limY=Math.max(1,...py.map(Math.abs))*1.5;
+ Plotly.react('m3poles',[{x:px,y:py,type:'scatter',mode:'markers+text',text:['λ₁','λ₂'],textposition:'top right',marker:{color:c.out,size:12,symbol:'x',line:{width:2,color:c.out}},name:'Poles = λ(A)'}],{
+  margin:{l:64,r:24,t:28,b:55},paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',
+  font:{family:'Inter, sans-serif',color:css('--ink'),size:11},showlegend:false,
+  xaxis:{title:'Real(s)',range:[-limX,Math.max(.4,limX*.25)],zeroline:true,zerolinewidth:2,gridcolor:css('--line')},
+  yaxis:{title:'Imag(s)',range:[-limY,limY],zeroline:true,zerolinewidth:2,gridcolor:css('--line')}
+ },cfg);
+ Plotly.react('m3phase',[
+  {x:r.x,y:r.v,name:'Phase trajectory (x₁, x₂)',mode:'lines',line:{color:c.out,width:2.5}},
+  {x:[r.x[0]],y:[r.v[0]],name:'Start',mode:'markers',marker:{color:c.star,size:10}},
+  {x:[r.final],y:[0],name:'Equilibrium (F/k,0)',mode:'markers',marker:{color:c.tan,size:11,symbol:'diamond'}}
+ ],m23Lay('x₁ = displacement','x₂ = velocity'),cfg);
+}
+function updateM3(){
+ const p=m3Params(),r=m3Response(p),metrics=m3Metrics(p,r),roots=m3Roots(p);
+ const labels={m:fmt(p.m,2)+' kg',b:fmt(p.b,3)+' N·s/m',k:fmt(p.k,3)+' N/m',F:fmt(p.F,2)+' N',z:fmt(p.z,3),wn:fmt(p.wn,3)+' rad/s'};
+ Object.entries(labels).forEach(([k,v])=>{$('m3'+k+'V').textContent=v;});
+ const metricData=[
+  ['Damping case',m3Class(p)],['Steady displacement',fmt(r.final,4)+' m'],
+  ['Rise time (10–90%)',metrics.rise===null?'—':fmt(metrics.rise,4)+' s'],
+  ['Peak time',metrics.peakTime===null?'No peak':fmt(metrics.peakTime,4)+' s'],
+  ['Overshoot',fmt(metrics.peak,3)+' %'],
+  ['Settling time (2%)',metrics.settle===null?'Does not settle':fmt(metrics.settle,4)+' s']
+ ];
+ $('m3metrics').innerHTML=metricData.map(([k,v])=>`<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+ m3RenderMatrices(p,roots);m3RenderValidation();
+ if(window.Plotly && $('m3').classList.contains('show'))m3Plot(p,r,metrics,roots);
+}
+function m3SetZ(z){m3Ensure('m3z',z);m3SyncFromNormalized();updateM3();m3MakeQuestion();}
+function m3SetReset(){
+ $('m3m').value=1;$('m3z').value=.5;$('m3wn').value=2;$('m3F').value=4;
+ m3SyncFromNormalized();updateM3();m3MakeQuestion();
+}
+function m3MakeQuestion(){
+ const p=m3Params(),roots=m3Roots(p),over=p.z<1?100*Math.exp(-Math.PI*p.z/Math.sqrt(1-p.z*p.z)):0;
+ const qs=[
+  {text:`With ζ = ${fmt(p.z,3)}, predict the theoretical <b>percent overshoot</b>.`,ans:over,tol:Math.max(1,over*.05),unit:'%',explain:p.z>=1?'For ζ ≥ 1 there is no overshoot.':`Overshoot = 100 exp(−πζ/√(1−ζ²)) = ${fmt(over,3)}%.`},
+  {text:`For m = ${fmt(p.m,2)}, k = ${fmt(p.k,2)}, predict natural frequency <b>ωₙ</b>.`,ans:p.wn,tol:.05*p.wn,unit:'rad/s',explain:`ωₙ = √(k/m) = ${fmt(p.wn,4)} rad/s.`},
+  {text:`At force F = ${fmt(p.F,2)} N and spring k = ${fmt(p.k,2)} N/m, predict the <b>final displacement</b>.`,ans:p.F/p.k,tol:.05*p.F/p.k,unit:'m',explain:`xss = F/k = ${fmt(p.F/p.k,5)} m.`},
+  {text:`Predict the <b>real part</b> of the system poles (average of their real parts).`,ans:-p.z*p.wn,tol:Math.max(.05,Math.abs(p.z*p.wn)*.05),unit:'s⁻¹',explain:`Real part average = −ζωₙ = ${fmt(-p.z*p.wn,5)} s⁻¹. Poles are ${m3RootStr(roots[0])}, ${m3RootStr(roots[1])}.`}
+ ];
+ M3.q=qs[Math.floor(Math.random()*qs.length)];M3.answered=false;
+ $('m3question').innerHTML=M3.q.text;$('m3unit').textContent=M3.q.unit;
+ $('m3answer').value='';$('m3feedback').className='fb';$('m3feedback').textContent='';
+}
+function m3CheckQuestion(){
+ const str=$('m3answer').value,v=Number(str),f=$('m3feedback');
+ if(!str.trim()||!isFinite(v)){f.className='fb warn';f.textContent='Enter a number first.';return;}
+ const q=M3.q,ok=Math.abs(v-q.ans)<=q.tol;
+ if(!M3.answered){M3.total++;if(ok)M3.right++;}
+ M3.answered=true;f.className='fb '+(ok?'ok':'no');
+ f.innerHTML=`${ok?'Good prediction!':'Not quite.'} Answer: <b>${fmt(q.ans,4)} ${q.unit}</b>. ${q.explain}`;
+ $('m3score').textContent=`Session score: ${M3.right} / ${M3.total}`;
+}
+['m3z','m3wn'].forEach(id=>$(id).addEventListener('input',()=>{m3SyncFromNormalized();updateM3();m3MakeQuestion();}));
+['m3m','m3b','m3k'].forEach(id=>$(id).addEventListener('input',()=>{m3SyncFromPhysical();updateM3();m3MakeQuestion();}));
+$('m3F').addEventListener('input',()=>{updateM3();m3MakeQuestion();});
+$('m3under').onclick=()=>m3SetZ(.5);
+$('m3critical').onclick=()=>m3SetZ(1);
+$('m3over').onclick=()=>m3SetZ(1.6);
+$('m3reset').onclick=m3SetReset;
+$('m3check').onclick=m3CheckQuestion;$('m3new').onclick=m3MakeQuestion;
+$('m3answer').addEventListener('keydown',e=>{if(e.key==='Enter')m3CheckQuestion();});
+
+/* =========================================================
    Load Plotly from several CDNs, so one blocked CDN
    does not break the page ("Plotly is not defined")
    ========================================================= */
@@ -837,8 +1190,12 @@ function loadPlotly(i){
   s.onerror=() => loadPlotly(i+1);
   document.head.appendChild(s);
 }
-function onPlotlyReady(){ update(); newQuestion(); }
+function onPlotlyReady(){ update(); newQuestion(); updateM2(); updateM3(); }
 
+updateM2();
+updateM3();
+m2MakeQuestion();
+m3MakeQuestion();
 route();
 update();
 newQuestion();
