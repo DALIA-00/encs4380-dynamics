@@ -12,7 +12,7 @@ Interactive web toolkit for sensor dynamic characteristics (ENCS4380 Interfacing
 |---|---|
 | Dalia Abu Baker| Module 1 — First-order time response |
 | Mohammad Obeidallah| Module 2 — First-order frequency response |
-| Ghaleb Shakhsheer | Module 3 — Second-order response + state-space panel |
+| Ghaleb Shakhsher | Module 3 — Second-order response + state-space panel |
 | Hala Sarsour | Module 4 — "Guess the sensor" challenge |
 
 ## Module 1 — First-order time response (thermometer)
