@@ -29,6 +29,15 @@ Model: τ·dy/dt + y = K·x(t), G(s) = K/(τs + 1)
 Closed-form responses used (from the lecture slides):
 - Step: y(t) = KA + (y₀ − KA)·e^(−t/τ)
 - Ramp: y(t) = K·q̇·(τ·e^(−t/τ) + t − τ)
+## Screenshots
+
+| Module 1 | Module 2 |
+|---|---|
+| ![Module 1](screenshots/module_1.png) | ![Module 2](screenshots/module_2.png) |
+
+| Module 3 | Module 4 |
+|---|---|
+| ![Module 3](screenshots/module_3.png) | ![Module 4](screenshots/module_4.png) |
 
 ## Validation checks
 
@@ -40,6 +49,36 @@ Closed-form responses used (from the lecture slides):
 | 4 | ζ = 0.5 | overshoot 16.3 % | Module 3 |
 | 5 | ζ = 1 | no overshoot | Module 3 |
 | 6 | m = 1, b = 2, k = 4 | eigenvalues −1 ± j1.732 | Module 3 |
+## Module 2 — First-order frequency response
+
+Model: G(s) = K/(τs + 1), M = 1/√(1 + (ωτ)²), φ = −tan⁻¹(ωτ)
+
+- Sliders for τ, input frequency ω, gain K and input amplitude A.
+- Input, ideal output and sensor output sines on one plot.
+- Live amplitude ratio M, phase lag, and cutoff frequency ω_c = 1/τ.
+- Bode plot (magnitude and phase) with the cutoff marked and a dot that follows the selected ω.
+- Dynamic-error calculator (δ = M − 1) and a button that applies the "100 Hz, at most 5% error" design limit.
+- "Predict, then check" box and a validation table.
+
+## Module 3 — Second-order response and state-space panel
+
+Model: G(s) = Kωₙ² / (s² + 2ζωₙs + ωₙ²), with ωₙ = √(k/m) and ζ = b / (2√(mk))
+
+- Sliders for ζ and ωₙ, or for m, b and k. The two sets stay synchronised.
+- Underdamped, critically damped and overdamped step responses (preset buttons), with reference curves.
+- Rise time, peak time, overshoot and settling time read live off the sampled curve.
+- Poles plotted in the s-plane.
+- State-space panel: A and B update live with m, b and k, the eigenvalues of A are shown next to the poles, and the (x₁, x₂) path is drawn in the phase plane.
+- "Predict, then check" box and a validation table.
+
+## Module 4 — "Guess the sensor"
+
+- The page picks a hidden sensor at random: first order step (random K and τ), first order with a sine input (K = 1, random τ), or second order step (K = 1, random ζ and ωₙ). It adds noise to the response.
+- You read the curve, estimate the parameters, and submit.
+- The page reveals the true values, overlays the true curve (green) and your guess (red dashed) on the data, and scores the round.
+- Scoring: within 10% error on a parameter is full marks, falling linearly to zero at 50% error. A round is worth 100 points, split across its parameters.
+- Hints on request (one at a time), a "New sensor" button, and a running score for the session.
+- The methods section on the page lists the equations needed: the 63.2% point and the log method for first order, and overshoot and peak time for second order.
 
 ## Tech
 
