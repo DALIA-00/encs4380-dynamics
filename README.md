@@ -84,7 +84,6 @@ Model: G(s) = Kωₙ² / (s² + 2ζωₙs + ωₙ²), with ωₙ = √(k/m) and 
 
 Static HTML + JavaScript, plots with [Plotly.js](https://plotly.com/javascript/). No server needed; works on phones.
 
-## Screenshots
 
 <!-- add screenshots/module1-step.png and screenshots/module1-ramp.png -->
 
