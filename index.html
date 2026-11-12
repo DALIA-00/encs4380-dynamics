@@ -173,7 +173,9 @@ ul.tight li{margin-bottom:6px}
 #m3eigen{font-size:.9rem;overflow-wrap:anywhere}
 #m2bode,#m3step,#m3phase,#m3poles,#m2wave{min-width:0}
 @media(max-width:600px){#m2bode{height:590px!important} .matrix-view{font-size:.72rem} }
-
+/* Module 4 */
+.controls input[type=number]{width:100%;padding:9px 11px;border:1.5px solid var(--topaz);border-radius:10px;font:inherit;margin-top:6px;background:#fff;color:var(--ink)}
+#m4hints{margin-top:12px}
 </style>
 </head>
 <body data-theme="sunset">
@@ -202,7 +204,7 @@ ul.tight li{margin-bottom:6px}
       <a href="#m1" data-page="m1"><span class="num">1</span>First-order time<span class="tag">Live</span></a>
       <a href="#m2" data-page="m2"><span class="num">2</span>Frequency response<span class="tag">Live</span></a>
       <a href="#m3" data-page="m3"><span class="num">3</span>Second-order<span class="tag">Live</span></a>
-      <a href="#m4" data-page="m4"><span class="num">4</span>Guess the sensor<span class="tag">12 Nov</span></a>
+      <a href="#m4" data-page="m4"><span class="num">4</span>Guess the sensor<span class="tag">Live</span></a>
       <a href="#val" data-page="val"><span class="num">✓</span>Validation checks</a>
       <a href="#team" data-page="team"><span class="num">☺</span>Team</a>
     </nav>
@@ -265,7 +267,7 @@ ul.tight li{margin-bottom:6px}
           <a class="modcard" href="#m1"><div class="n">01</div><b>First-order time response</b><small>Thermometer · step and ramp · log plot</small><br><span class="status live">Live</span></a>
           <a class="modcard" href="#m2"><div class="n">02</div><b>First-order frequency response</b><small>Sines · Bode plot · dynamic error</small><br><span class="status live">Live</span></a>
           <a class="modcard" href="#m3"><div class="n">03</div><b>Second-order response</b><small>Accelerometer · damping · state space</small><br><span class="status live">Live</span></a>
-          <a class="modcard" href="#m4"><div class="n">04</div><b>Guess the sensor</b><small>Hidden sensor challenge with scoring</small><br><span class="status soon">Final · 12 Nov</span></a>
+          <a class="modcard" href="#m4"><div class="n">04</div><b>Guess the sensor</b><small>Hidden sensor challenge with scoring</small><br><span class="status live">Live</span></a>
         </div>
       </div>
     </section>
@@ -425,11 +427,73 @@ ul.tight li{margin-bottom:6px}
       <div class="card"><h3>State trajectory: phase plane (x₁ vs x₂)</h3><p class="note">For an underdamped sensor, displacement and velocity spiral toward equilibrium (F/k, 0); for an overdamped sensor, the trajectory returns without oscillating.</p><div id="m3phase" class="plot" style="height:420px"></div></div>
       <div class="card predict"><h3>Predict, then check</h3><p class="note">Predict how the sensor behaves before checking the numerical result.</p><p class="qtext" id="m3question"></p><div class="btnrow" style="align-items:center"><input type="number" id="m3answer" step="any" placeholder="Your answer" aria-label="Module 3 prediction"><span id="m3unit"></span><button class="btn primary" type="button" id="m3check">Check</button><button class="btn" type="button" id="m3new">New question</button></div><div class="fb" id="m3feedback"></div><p class="note" id="m3score"></p></div>
       <div class="card"><h3>Module 3 validation checks</h3><div class="tablewrap"><table><thead><tr><th>Check</th><th>Expected</th><th>Our value</th><th>Result</th></tr></thead><tbody id="m3validation"></tbody></table></div></div>
+   <!-- ===== MODULE 4 — Guess the Sensor  ===== -->
     </section>
     <section class="page" id="m4">
-      <div class="pagehead"><div><div class="kicker">Module 04</div><h1>Guess the sensor</h1></div><div class="owner" id="m4owner"></div></div>
-      <div class="card soonbox"><div class="big">12 Nov</div><p>Arrives with the final release: a hidden random sensor with noise, you estimate τ or ζ and ωₙ, then the page reveals the truth and scores you.</p></div>
-    </section>
+      <div class="pagehead">
+        <div><div class="kicker">Module 04</div><h1>Guess the sensor</h1></div>
+        <div class="owner" id="m4owner"></div>
+      </div>
+
+      <div class="card">
+        <p>A hidden sensor responds to an input, with a little noise. Read the curve and work backwards, the way an engineer does with a real sensor. Submit your estimate and the page reveals the true values, overlays the true curve on your guess, and scores you.</p>
+      </div>
+
+      <div class="layout">
+        <div class="card controls">
+          <h3>Your estimate</h3>
+          <p class="note" id="m4prompt"></p>
+          <div id="m4rowK"><label for="m4gK">Gain K</label><input type="number" id="m4gK" step="any" min="0" inputmode="decimal"></div>
+          <div id="m4rowTau"><label for="m4gTau">Time constant τ (s)</label><input type="number" id="m4gTau" step="any" min="0" inputmode="decimal"></div>
+          <div id="m4rowZeta"><label for="m4gZeta">Damping ratio ζ</label><input type="number" id="m4gZeta" step="any" min="0" inputmode="decimal"></div>
+          <div id="m4rowWn"><label for="m4gWn">Natural frequency ωₙ (rad/s)</label><input type="number" id="m4gWn" step="any" min="0" inputmode="decimal"></div>
+          <div class="btnrow">
+            <button class="btn primary" id="m4submit" type="button">Submit guess</button>
+            <button class="btn" id="m4hint" type="button">Show hint</button>
+            <button class="btn" id="m4new" type="button">New sensor</button>
+          </div>
+          <div class="fb" id="m4fb"></div>
+          <ul class="tight" id="m4hints"></ul>
+        </div>
+
+        <div class="card">
+          <h3 id="m4title">Hidden sensor</h3>
+          <p class="note">Hover over the dots to read values. Drag to zoom, double-click to reset.</p>
+          <div id="m4plot" class="plot"></div>
+          <div class="stats" id="m4stats"></div>
+        </div>
+      </div>
+
+      <div class="card" id="m4result" style="display:none">
+        <h3>Reveal</h3>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Parameter</th><th>True</th><th>Your guess</th><th>Error</th><th>Points</th></tr></thead>
+            <tbody id="m4resBody"></tbody>
+          </table>
+        </div>
+        <p id="m4resSummary"></p>
+        <p class="note">Green line = true response · red dashed = your guess · dots = what you were shown.</p>
+      </div>
+
+      <div class="card">
+        <h3>Methods you can use</h3>
+        <ul class="tight">
+          <li><b>First order, step:</b> K is the final value divided by the step size (1). τ is the time at which the output reaches 63.2% of its final value. Or plot ln(error fraction) against t: it is a line with slope −1/τ.</li>
+          <li><b>First order, sine:</b> once the transient has died out, measure the amplitude ratio M = 1/√(1+(ωτ)²) or the phase lag φ = tan⁻¹(ωτ).</li>
+          <li><b>Second order, step:</b> read the overshoot and the peak time. The overshoot gives ζ, then the peak time gives ωₙ. Solve in this order:
+            <div class="eqrow" style="justify-content:flex-start">
+              <span class="eq">Mp = (peak − final) / final</span>
+              <span class="eq">ζ = −ln Mp / √(π² + ln²Mp)</span>
+              <span class="eq">ωₙ = π / (t<sub>p</sub>·√(1−ζ²))</span>
+            </div>
+            Here Mp is the overshoot as a fraction (30% means 0.30) and t<sub>p</sub> is the time of the first peak, in seconds.
+          </li>
+        </ul>
+        <h3 style="margin-top:14px">Scoring</h3>
+        <p class="note">Each parameter is scored by relative error. Within 10% earns full marks. Between 10% and 50% the score falls linearly, and beyond 50% it is zero. A round is worth 100 points, split equally across its parameters.</p>
+      </div>
+    </section>      
 
     <!-- ===== VALIDATION ===== -->
     <section class="page" id="val">
@@ -471,13 +535,13 @@ const GROUP_NAME = "";
 const TEAM = [
   { name: "Dalia Abu Baker",          role: "Module 1 — First-order time response" },
   { name: "Ghaleb Raed",              role: "Module  — " },
-  { name: "Hala Sarsour",             role: "Module  — " },
+  { name: "Hala Sarsour",             role: "Module  4 " },
   { name: "Mohammad Isam Obeidallah", role: "Modules 2 & 3 — Frequency and second-order response" }
 ];
 /* Who built each module (shown at the top of each module page) */
 const MODULE_OWNERS = {
   m1: ["Dalia Abu Baker"],
-  m2: ["Mohammad Isam Obeidallah"], m3: ["Mohammad Isam Obeidallah"], m4: []
+  m2: ["Mohammad Isam Obeidallah"], m3: ["Mohammad Isam Obeidallah"], m4: ["Hala Sarsour"]
 };
 
 /* ---------- Team rendering ---------- */
@@ -506,6 +570,7 @@ function route(){
   if(target === 'm1' && window.Plotly){ update(); setTimeout(()=>{ Plotly.Plots.resize('plot1'); Plotly.Plots.resize('plot2'); }, 30); }
   if(target === 'm2') updateM2();
   if(target === 'm3') updateM3();
+  if(target === 'm4') m4Show();
   if(target === 'val') renderValAll();
 }
 window.addEventListener('hashchange', route);
@@ -1170,7 +1235,158 @@ $('m3over').onclick=()=>m3SetZ(1.6);
 $('m3reset').onclick=m3SetReset;
 $('m3check').onclick=m3CheckQuestion;$('m3new').onclick=m3MakeQuestion;
 $('m3answer').addEventListener('keydown',e=>{if(e.key==='Enter')m3CheckQuestion();});
+/* =========================================================
+   MODULE 4 — Guess the sensor
+   ========================================================= */
+const M4 = {s:null, answered:false, hint:0, rounds:0, points:0};
+const m4Rnd = (a,b,d=1) => +(a+Math.random()*(b-a)).toFixed(d);
+function m4Randn(){
+  let u=0, v=0;
+  while(!u) u=Math.random();
+  while(!v) v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
 
+/* Closed-form responses */
+const m4FoStep = (t,p) => p.K*(1-Math.exp(-t/p.tau));                       // unit step
+const m4FoSine = (t,p) => {                                                  // K = 1, input sin(wt)
+  const a=p.w*p.tau;
+  return (Math.sin(p.w*t) - a*Math.cos(p.w*t) + a*Math.exp(-t/p.tau))/(1+a*a);
+};
+const m4So = (t,p) => m3Shape({z:p.zeta, wn:p.wn}, t)[0];                    // reuses Module 3, K = 1
+const m4Curve = (type,t,p) => type==='fo-step' ? m4FoStep(t,p) : type==='fo-sine' ? m4FoSine(t,p) : m4So(t,p);
+
+const M4_HINTS = {
+  'fo-step': [
+    'The final value of the output tells you K, because the step has size 1.',
+    'τ is the time at which the output has covered 63.2% of its final value.',
+    'Or: ln of the error fraction against t is a straight line with slope −1/τ.'
+  ],
+  'fo-sine': [
+    'After the transient, the output is a sine of the same frequency, smaller and shifted.',
+    'The amplitude ratio is M = 1/√(1 + (ωτ)²). Measure the output amplitude (the input amplitude is 1) and solve for τ.',
+    'Or use the phase lag φ = tan⁻¹(ωτ).'
+  ],
+  'so-step': [
+    'Overshoot depends only on ζ.',
+    'With fractional overshoot Mp: ζ = −ln(Mp) / √(π² + ln²(Mp)).',
+    'The peak time is tp = π / (ωₙ√(1 − ζ²)). Once you have ζ, solve for ωₙ.'
+  ]
+};
+
+function m4New(){
+  const r=Math.random(), s={};
+  if(r<0.35){
+    s.type='fo-step'; s.K=m4Rnd(0.5,5); s.tau=m4Rnd(1,10);
+    s.tmax=6*s.tau; s.sigma=0.015*s.K;
+  } else if(r<0.55){
+    s.type='fo-sine'; s.K=1; s.tau=m4Rnd(1,10);
+    s.w=+(m4Rnd(0.4,3,2)/s.tau).toFixed(3);
+    s.tmax=Math.max(6*s.tau, 3*2*Math.PI/s.w); s.sigma=0.03;
+  } else {
+    s.type='so-step'; s.zeta=m4Rnd(0.1,0.75,2); s.wn=m4Rnd(1,10);
+    s.tmax=Math.max(6/(s.zeta*s.wn), 3*2*Math.PI/(s.wn*Math.sqrt(1-s.zeta*s.zeta)));
+    s.sigma=0.01;
+  }
+  s.t=linspace(0,s.tmax,300);
+  s.yn=s.t.map(t => m4Curve(s.type,t,s) + s.sigma*m4Randn());
+  M4.s=s; M4.answered=false; M4.hint=0;
+
+  ['m4gK','m4gTau','m4gZeta','m4gWn'].forEach(id => $(id).value='');
+  $('m4hints').innerHTML=''; $('m4fb').className='fb'; $('m4fb').innerHTML='';
+  $('m4result').style.display='none';
+  $('m4submit').disabled=false; $('m4hint').disabled=false;
+
+  const fo = s.type!=='so-step';
+  $('m4rowK').style.display   = s.type==='fo-step' ? '' : 'none';
+  $('m4rowTau').style.display = fo ? '' : 'none';
+  $('m4rowZeta').style.display= fo ? 'none' : '';
+  $('m4rowWn').style.display  = fo ? 'none' : '';
+
+  if(s.type==='fo-step'){
+    $('m4title').textContent='Hidden first-order sensor';
+    $('m4prompt').textContent='A unit step (x = 1) is applied at t = 0. Estimate the gain K and the time constant τ.';
+  } else if(s.type==='fo-sine'){
+    $('m4title').textContent='Hidden first-order sensor';
+    $('m4prompt').innerHTML='The input is sin(ωt) with ω = <b>'+s.w+' rad/s</b>. The sensor has K = 1. Estimate the time constant τ.';
+  } else {
+    $('m4title').textContent='Hidden second-order sensor';
+    $('m4prompt').textContent='A unit step (x = 1) is applied at t = 0. The sensor has K = 1. Estimate the damping ratio ζ and the natural frequency ωₙ.';
+  }
+  m4Stats(); m4Plot(false,null);
+}
+
+function m4Stats(){
+  stats('m4stats', [
+    ['Rounds played', M4.rounds],
+    ['Session score', M4.points+' / '+(M4.rounds*100)]
+  ]);
+}
+
+function m4Plot(reveal, guess){
+  const s=M4.s;
+  if(!s || !window.Plotly) return;
+  const C=colors(), tr=[];
+  if(s.type==='fo-sine') tr.push({x:s.t, y:s.t.map(t=>Math.sin(s.w*t)), name:'Input sin(ωt)', line:{color:C.inp,dash:'dot',width:2}, hoverinfo:'skip'});
+  tr.push({x:s.t, y:s.yn, mode:'markers', name:'Measured (noisy)', marker:{color:C.out,size:5}, hovertemplate:'t = %{x:.3f} s<br>y = %{y:.3f}<extra></extra>'});
+  if(reveal){
+    const tt=linspace(0,s.tmax,500);
+    tr.push({x:tt, y:tt.map(t=>m4Curve(s.type,t,s)), name:'True response', line:{color:'#2E7D32',width:3.5}, hoverinfo:'skip'});
+    tr.push({x:tt, y:tt.map(t=>m4Curve(s.type,t,guess)), name:'Your guess', line:{color:'#C62828',width:2.5,dash:'dash'}, hoverinfo:'skip'});
+  }
+  Plotly.react('m4plot', tr, lay('time t (s)','output y'), cfg);
+}
+
+function m4Points(trueV, guessV){
+  const err=Math.abs(guessV-trueV)/trueV;
+  return {err, pts: err<=0.10 ? 1 : Math.max(0, 1-(err-0.10)/0.40)};
+}
+
+function m4Submit(){
+  const s=M4.s;
+  if(!s || M4.answered) return;
+  const rd=id=>parseFloat($(id).value);
+  let rows;
+  if(s.type==='fo-step') rows=[['K',s.K,rd('m4gK')],['τ (s)',s.tau,rd('m4gTau')]];
+  else if(s.type==='fo-sine') rows=[['τ (s)',s.tau,rd('m4gTau')]];
+  else rows=[['ζ',s.zeta,rd('m4gZeta')],['ωₙ (rad/s)',s.wn,rd('m4gWn')]];
+
+  const fb=$('m4fb');
+  if(rows.some(r=>!(r[2]>0))){ fb.className='fb warn'; fb.textContent='Enter a positive number for every parameter.'; return; }
+
+  M4.answered=true; $('m4submit').disabled=true; $('m4hint').disabled=true;
+  const res=rows.map(([name,tv,gv]) => ({name,tv,gv,...m4Points(tv,gv)}));
+  const roundPts=Math.round(100*res.reduce((a,r)=>a+r.pts,0)/res.length);
+  M4.rounds++; M4.points+=roundPts;
+
+  $('m4resBody').innerHTML=res.map(r =>
+    `<tr><td>${r.name}</td><td>${fmt(r.tv,3)}</td><td>${fmt(r.gv,3)}</td><td>${fmt(r.err*100,1)}%</td><td>${pill(r.err<=0.10)} ${Math.round(r.pts*100)}%</td></tr>`).join('');
+  $('m4resSummary').innerHTML='<b>This round: '+roundPts+' / 100</b>'+(roundPts===100?' (full marks!)':'');
+  $('m4result').style.display='';
+  fb.className='fb '+(roundPts===100?'ok':'no');
+  fb.innerHTML = roundPts===100 ? '<b>Excellent.</b> Every parameter is within 10%.' : '<b>Not quite.</b> Compare the red dashed guess with the green true curve.';
+  m4Stats();
+
+  const g=Object.assign({}, s);
+  if(s.type==='fo-step'){ g.K=rows[0][2]; g.tau=rows[1][2]; }
+  else if(s.type==='fo-sine'){ g.tau=rows[0][2]; }
+  else { g.zeta=rows[0][2]; g.wn=rows[1][2]; }
+  m4Plot(true,g);
+}
+
+function m4Hint(){
+  const list=M4_HINTS[M4.s.type];
+  if(M4.hint>=list.length) return;
+  const li=document.createElement('li');
+  li.textContent=list[M4.hint++];
+  $('m4hints').appendChild(li);
+  if(M4.hint>=list.length) $('m4hint').disabled=true;
+}
+
+$('m4submit').addEventListener('click', m4Submit);
+$('m4hint').addEventListener('click', m4Hint);
+$('m4new').addEventListener('click', m4New);
+function m4Show(){ if(!M4.s) m4New(); else m4Plot(M4.answered, null); }
 /* =========================================================
    Load Plotly from several CDNs, so one blocked CDN
    does not break the page ("Plotly is not defined")
