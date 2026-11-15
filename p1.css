@@ -1,0 +1,18 @@
+/* Homework 2 — P1. Styles are scoped to #p1 to avoid affecting HW1 or teammates. */
+#p1 .p1-diagram {display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;padding:12px 4px}
+#p1 .p1-block {padding:12px 15px;border:2px solid var(--main);border-radius:10px;background:var(--bg);font-weight:700;text-align:center}
+#p1 .p1-arrow {font-size:1.45rem;color:var(--main-dark);font-weight:700}
+#p1 .p1-feedback {text-align:center;color:var(--muted);font-size:.84rem;margin-top:6px}
+#p1 .p1-split {display:grid;grid-template-columns:310px minmax(0,1fr);gap:15px;align-items:start}
+#p1 .p1-split > div, #p1 .card {min-width:0}
+#p1 .p1-checks {margin-top:8px}
+#p1 .p1-plot {height:405px;min-width:0}
+#p1 .p1-plot-small {height:310px;min-width:0}
+#p1 .p1-closed {display:none}
+#p1 .p1-inline {display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+#p1 .p1-inline input[type=number] {padding:9px 10px;min-width:130px;width:160px;border:1.5px solid var(--topaz);border-radius:10px;font:inherit}
+#p1 .p1-status {font-size:.85rem;color:var(--muted)}
+#p1 .p1-equation {overflow-wrap:anywhere}
+#p1 .p1-divider {border:0;border-top:1px solid var(--line);margin:15px 0}
+@media(max-width:1050px){#p1 .p1-split{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){#p1 .p1-plot{height:360px} #p1 .p1-plot-small{height:285px} #p1 .p1-block{padding:8px 10px;font-size:.82rem}}

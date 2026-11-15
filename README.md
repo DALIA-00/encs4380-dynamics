@@ -12,7 +12,7 @@ Interactive web toolkit for sensor dynamic characteristics (ENCS4380 Interfacing
 |---|---|
 | Dalia Abu Baker| Module 1 — First-order time response |
 | Mohammad Obeidallah| Module 2 — First-order frequency response |
-| Ghaleb Shakhsheer | Module 3 — Second-order response + state-space panel |
+| Ghaleb Shakhsheer | HW1 Module 3 — Second-order response + state-space panel; HW2 P1 — PID playground |
 | Hala Sarsour | Module 4 — "Guess the sensor" challenge |
 
 ## Module 1 — First-order time response (thermometer)
@@ -90,3 +90,24 @@ Static HTML + JavaScript, plots with [Plotly.js](https://plotly.com/javascript/)
 ## AI use
 
 An AI assistant (Claude) was used to help write the Module 1 page code and this README. All formulas were checked against the lecture slides and the validation numbers.
+
+
+---
+
+## Homework 2 — Control
+
+- **P1 — PID Playground (Ghaleb Shakhsheer):** [Open P1](https://dalia-00.github.io/encs4380-dynamics/#p1).
+- Reuses HW1 Module 1 first-order model `G(s) = K/(τs+1)` and Module 3 normalized second-order model `G(s) = Kωₙ²/(s²+2ζωₙs+ωₙ²)`.
+- Live plant selector, PID gains `Kp/Ki/Kd`, setpoint step, and symmetric actuator limit `±Umax` (normalized units).
+- Differential-equation simulation with adaptive-step **forward Euler**; it does not use closed-form output curves.
+- Plots of output versus setpoint, control signal and saturation limits, plus rise time (10–90%), overshoot, ±2% settling time and final simulated error.
+- Uses **derivative on measurement** (`-Kd·dy/dt`) to prevent derivative kick from a setpoint step; conditional integral anti-windup prevents accumulation beyond actuator limits.
+- Includes a “Predict, then check” exercise and numerical validation checks for P-only (`Kp = 9`) and PI (`Kp = 1, Ki = 1`, plus another PI setting).
+
+**P1 source files:** `p1.js` (simulation, plots, metrics, validation), `p1.css` (styles), plus the new P1 page/navigation and script link in `index.html`.
+
+**Note:** P1 uses normalized actuator commands. The real Micromouse motor model and the physical 0–100% PWM constraint belong in the team’s separate *My System* page. P2, P3 and P4 are separate teammate modules; they are not included in this P1 branch.
+
+### AI use — Homework 2 P1
+
+ChatGPT assisted with implementing and reviewing the P1 client-side PID simulation, UI and documentation. The P1 owner must personally verify and be able to explain all equations, code and plots in the demo.
