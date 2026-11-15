@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dynamic Characteristics Toolkit</title>
 <meta name="description" content="ENCS4380 Homework 1 - interactive toolkit for sensor dynamic characteristics">
+<link rel="stylesheet" href="p1.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
@@ -205,6 +206,8 @@ ul.tight li{margin-bottom:6px}
       <a href="#m2" data-page="m2"><span class="num">2</span>Frequency response<span class="tag">Live</span></a>
       <a href="#m3" data-page="m3"><span class="num">3</span>Second-order<span class="tag">Live</span></a>
       <a href="#m4" data-page="m4"><span class="num">4</span>Guess the sensor<span class="tag">Live</span></a>
+      <div class="side-label">Control · Homework 2</div>
+      <a href="#p1" data-page="p1"><span class="num">P1</span>PID playground<span class="tag">Live</span></a>
       <a href="#val" data-page="val"><span class="num">✓</span>Validation checks</a>
       <a href="#team" data-page="team"><span class="num">☺</span>Team</a>
     </nav>
@@ -269,6 +272,14 @@ ul.tight li{margin-bottom:6px}
           <a class="modcard" href="#m3"><div class="n">03</div><b>Second-order response</b><small>Accelerometer · damping · state space</small><br><span class="status live">Live</span></a>
           <a class="modcard" href="#m4"><div class="n">04</div><b>Guess the sensor</b><small>Hidden sensor challenge with scoring</small><br><span class="status live">Live</span></a>
         </div>
+      </div>
+      <div class="card">
+        <h3>Homework 2 · Control</h3>
+        <p>Try a live feedback controller on the first- and second-order plants from Homework 1.</p>
+        <div class="modcards">
+          <a class="modcard" href="#p1"><div class="n">P1</div><b>PID playground</b><small>Live P, I, D gains · feedback response · actuator limit · validation</small><br><span class="status live">Live</span></a>
+        </div>
+        <p class="note">The remaining Control modules (P2, P3 and P4) are assigned to other group members.</p>
       </div>
     </section>
 
@@ -495,6 +506,83 @@ ul.tight li{margin-bottom:6px}
       </div>
     </section>      
 
+    <!-- ===== HOMEWORK 2: P1 PID PLAYGROUND ===== -->
+    <section class="page" id="p1">
+      <div class="pagehead">
+        <div><div class="kicker">Homework 2 · P1</div><h1>PID playground</h1></div>
+        <div class="owner">Built by Ghaleb Shakhsheer</div>
+      </div>
+      <div class="card">
+        <h3>Goal: control a dynamic plant using feedback</h3>
+        <p>Change K<sub>p</sub>, K<sub>i</sub>, K<sub>d</sub> and the setpoint. The simulation solves the plant differential equation in time using Euler integration; all graphs and response metrics update live.</p>
+        <div class="eqrow"><span class="eq p1-equation">e(t) = r(t) − y(t)</span><span class="eq p1-equation">u = Kp·e + Ki·∫e dt − Kd·dy/dt</span><span class="eq" id="p1equation">G(s) = K / (τs + 1)</span></div>
+        <p class="note">Derivative is applied to the measured output, which avoids a large derivative kick when the setpoint steps. The actuator is limited to ±Umax, with conditional integration to reduce integral windup. Plant input is normalized, not actual PWM.</p>
+      </div>
+      <div class="card">
+        <h3>Closed-loop block diagram</h3>
+        <div class="p1-diagram" role="img" aria-label="Setpoint passes to an error summer, then the PID controller, the limited actuator, and the plant, with negative unity feedback from plant output to error summer.">
+          <span class="p1-block">Setpoint r</span><span class="p1-arrow">→</span>
+          <span class="p1-block">Σ (+r −y)</span><span class="p1-arrow">→</span>
+          <span class="p1-block">PID</span><span class="p1-arrow">→</span>
+          <span class="p1-block">Limit ±Umax</span><span class="p1-arrow">→</span>
+          <span class="p1-block" id="p1diagramPlant">K / (τs+1)</span><span class="p1-arrow">→</span>
+          <span class="p1-block">Output y</span>
+        </div>
+        <div class="p1-feedback">↖ Negative unity feedback: the measured output y is subtracted from the setpoint before entering the PID.</div>
+      </div>
+      <div class="p1-split">
+        <div class="card controls">
+          <h3>Control the experiment</h3>
+          <p class="note">Select a plant from HW1. First order uses Module 1; second order uses Module 3's normalized model.</p>
+          <div class="seg" id="p1plantBtns">
+            <button type="button" class="on" data-kind="first">First order</button>
+            <button type="button" data-kind="second">Second order</button>
+          </div>
+          <h3 style="margin-top:17px" id="p1plantLabel">First-order plant</h3>
+          <label for="p1K">Plant gain K <span class="val" id="p1KV"></span></label><input type="range" id="p1K" min="0.2" max="3" step="0.1" value="1">
+          <div id="p1firstControls">
+            <label for="p1tau">Time constant τ (s) <span class="val" id="p1tauV"></span></label><input type="range" id="p1tau" min="0.2" max="5" step="0.1" value="1">
+          </div>
+          <div id="p1secondControls" style="display:none">
+            <label for="p1zeta">Damping ratio ζ <span class="val" id="p1zetaV"></span></label><input type="range" id="p1zeta" min="0.1" max="2" step="0.05" value="0.5">
+            <label for="p1wn">Natural frequency ωₙ (rad/s) <span class="val" id="p1wnV"></span></label><input type="range" id="p1wn" min="0.5" max="8" step="0.1" value="2">
+          </div>
+          <hr class="p1-divider">
+          <h3>PID gains</h3>
+          <label for="p1kp">Kp — proportional <span class="val" id="p1kpV"></span></label><input type="range" id="p1kp" min="0" max="20" step="0.1" value="9">
+          <label for="p1ki">Ki — integral <span class="val" id="p1kiV"></span></label><input type="range" id="p1ki" min="0" max="15" step="0.05" value="0">
+          <label for="p1kd">Kd — derivative <span class="val" id="p1kdV"></span></label><input type="range" id="p1kd" min="0" max="5" step="0.05" value="0">
+          <hr class="p1-divider">
+          <label for="p1setpoint">Setpoint step r <span class="val" id="p1setpointV"></span></label><input type="range" id="p1setpoint" min="0.5" max="5" step="0.1" value="1">
+          <label for="p1limit">Control limit Umax <span class="val" id="p1limitV"></span></label><input type="range" id="p1limit" min="1" max="30" step="1" value="20">
+          <p class="note" id="p1limitsText"></p>
+          <div class="btnrow">
+            <button type="button" class="btn primary" id="p1presetP">P only · Kp 9</button>
+            <button type="button" class="btn" id="p1presetPI">PI · Kp 1 Ki 1</button>
+            <button type="button" class="btn" id="p1presetPID">Try PID</button>
+            <button type="button" class="btn" id="p1reset">Reset</button>
+          </div>
+        </div>
+        <div>
+          <div class="card"><h3>Output versus setpoint</h3><div id="p1response" class="p1-plot" aria-label="Setpoint and plant output over time"></div><p class="note">The green dashed line is the requested value; the orange line is the plant response.</p></div>
+          <div class="card"><h3>Control signal u(t) and actuator limits</h3><div id="p1control" class="p1-plot-small" aria-label="PID control signal and upper and lower limits"></div><p class="note">The controller output is clipped at ±Umax. Change the limit to see saturation.</p></div>
+        </div>
+      </div>
+      <div class="card"><h3>Live performance metrics</h3><div class="stats" id="p1metrics"></div><p class="note" id="p1metricsNote"></p></div>
+      <div class="card predict">
+        <h3>Predict, then check</h3>
+        <p>Before using the plot cursor, predict the value of y at <strong>t = <span id="p1predictionTime">1.0</span> s</strong> for the current gains and plant. Change a slider to try another case.</p>
+        <div class="p1-inline"><input type="number" id="p1predAnswer" step="any" placeholder="Your predicted y" aria-label="Predicted output at one second"><button class="btn primary" type="button" id="p1predCheck">Check my prediction</button><span class="p1-status" id="p1predScore">Session score: 0 / 0</span></div>
+        <div id="p1predFeedback" class="fb"></div>
+      </div>
+      <div class="card p1-checks">
+        <h3>HW2 P1 validation checks</h3>
+        <p class="note">Reference system: K = 1, τ = 1 s, unit setpoint step. Results below are computed with the numerical simulator (rather than hard-coded PASS results).</p>
+        <div class="tablewrap"><table><thead><tr><th>Test</th><th>Expected</th><th>Computed</th><th>Status</th></tr></thead><tbody id="p1validationBody"></tbody></table></div>
+        <p class="note" id="p1validationStatus"></p>
+      </div>
+    </section>
+
     <!-- ===== VALIDATION ===== -->
     <section class="page" id="val">
       <div class="pagehead"><div><div class="kicker">Required by the brief</div><h1>Validation checks</h1></div></div>
@@ -572,6 +660,7 @@ function route(){
   if(target === 'm3') updateM3();
   if(target === 'm4') m4Show();
   if(target === 'val') renderValAll();
+  if(target === 'p1' && window.P1Controller) window.P1Controller.update();
 }
 window.addEventListener('hashchange', route);
 
@@ -580,7 +669,7 @@ document.querySelectorAll('.themes button').forEach(b => b.onclick = () => {
   document.body.dataset.theme = b.dataset.t;
   document.querySelectorAll('.themes button').forEach(x => x.classList.toggle('on', x === b));
   try { localStorage.setItem('dyn-theme', b.dataset.t); } catch(e) {}
-  if(window.Plotly){ update(); updateM2(); updateM3(); }
+  if(window.Plotly){ update(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); }
 });
 try { const t = localStorage.getItem('dyn-theme'); if(t){ const b=document.querySelector(`.themes button[data-t="${t}"]`); if(b) b.click(); } } catch(e) {}
 
@@ -1406,7 +1495,7 @@ function loadPlotly(i){
   s.onerror=() => loadPlotly(i+1);
   document.head.appendChild(s);
 }
-function onPlotlyReady(){ update(); newQuestion(); updateM2(); updateM3(); }
+function onPlotlyReady(){ update(); newQuestion(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); }
 
 updateM2();
 updateM3();
@@ -1417,5 +1506,6 @@ update();
 newQuestion();
 loadPlotly(0);
 </script>
+<script src="p1.js"></script>
 </body>
 </html>
