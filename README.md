@@ -108,6 +108,3 @@ An AI assistant (Claude) was used to help write the Module 1 page code and this 
 
 **Note:** P1 uses normalized actuator commands. The real Micromouse motor model and the physical 0–100% PWM constraint belong in the team’s separate *My System* page. P2, P3 and P4 are separate teammate modules; they are not included in this P1 branch.
 
-### AI use — Homework 2 P1
-
-ChatGPT assisted with implementing and reviewing the P1 client-side PID simulation, UI and documentation. The P1 owner must personally verify and be able to explain all equations, code and plots in the demo.
