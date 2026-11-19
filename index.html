@@ -6,6 +6,7 @@
 <title>Dynamic Characteristics Toolkit</title>
 <meta name="description" content="ENCS4380 Homework 1 - interactive toolkit for sensor dynamic characteristics">
 <link rel="stylesheet" href="p1.css">
+<link rel="stylesheet" href="p2.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
@@ -208,6 +209,7 @@ ul.tight li{margin-bottom:6px}
       <a href="#m4" data-page="m4"><span class="num">4</span>Guess the sensor<span class="tag">Live</span></a>
       <div class="side-label">Control · Homework 2</div>
       <a href="#p1" data-page="p1"><span class="num">P1</span>PID playground<span class="tag">Live</span></a>
+      <a href="#p2" data-page="p2"><span class="num">P2</span>Slow sensor in the loop<span class="tag">Live</span></a>
       <a href="#val" data-page="val"><span class="num">✓</span>Validation checks</a>
       <a href="#team" data-page="team"><span class="num">☺</span>Team</a>
     </nav>
@@ -278,8 +280,9 @@ ul.tight li{margin-bottom:6px}
         <p>Try a live feedback controller on the first- and second-order plants from Homework 1.</p>
         <div class="modcards">
           <a class="modcard" href="#p1"><div class="n">P1</div><b>PID playground</b><small>Live P, I, D gains · feedback response · actuator limit · validation</small><br><span class="status live">Live</span></a>
+          <a class="modcard" href="#p2"><div class="n">P2</div><b>A slow sensor in the loop</b><small>True output vs sensor reading · sensor τs · overshoot until oscillation</small><br><span class="status live">Live</span></a>
         </div>
-        <p class="note">The remaining Control modules (P2, P3 and P4) are assigned to other group members.</p>
+        <p class="note">P3 (digital PID) and P4 (tuning challenge) are coming next.</p>
       </div>
     </section>
 
@@ -583,6 +586,99 @@ ul.tight li{margin-bottom:6px}
       </div>
     </section>
 
+    <!-- ===== HOMEWORK 2: P2 A SLOW SENSOR IN THE LOOP ===== -->
+    <section class="page" id="p2">
+      <div class="pagehead">
+        <div><div class="kicker">Homework 2 · P2</div><h1>A slow sensor in the loop</h1></div>
+        <div class="owner">Built by Dalia Abu Baker</div>
+      </div>
+      <div class="card">
+        <h3>The controller only controls what the sensor says</h3>
+        <p>In P1 the controller saw the true output y. Real controllers never do: they see a <b>sensor reading y<sub>m</sub></b>, and a real sensor is itself a first-order system (Homework 1, Module 1). Here a sensor with time constant τ<sub>s</sub> sits in the feedback path. The controller drives r − y<sub>m</sub> to zero, but y<sub>m</sub> arrives late, so the controller keeps pushing after y has already reached the setpoint. Make the sensor slower and watch the true output overshoot more and more, until the loop oscillates.</p>
+        <div class="eqrow"><span class="eq">e = r − y<sub>m</sub></span><span class="eq">u = Kp·e + Ki·∫e dt − Kd·dy<sub>m</sub>/dt</span><span class="eq" id="p2equation">G(s) = K / (τs + 1)</span><span class="eq">τ<sub>s</sub>·dy<sub>m</sub>/dt = y − y<sub>m</sub></span></div>
+        <p class="note">Solved in time with forward Euler (plant, sensor and integral stepped together). The derivative acts on the sensor reading, and the integral stops growing while the actuator is saturated (anti-windup), as in P1.</p>
+      </div>
+      <div class="card">
+        <h3>Closed-loop block diagram</h3>
+        <div class="p2-diagram" role="img" aria-label="Setpoint enters a summer, then the PID, the actuator limit and the plant, giving the true output y. The feedback path goes through a first-order sensor, whose reading ym is subtracted from the setpoint.">
+          <span class="p2-block">Setpoint r</span><span class="p2-arrow">→</span>
+          <span class="p2-block">Σ (+r −y<sub>m</sub>)</span><span class="p2-arrow">→</span>
+          <span class="p2-block">PID</span><span class="p2-arrow">→</span>
+          <span class="p2-block">Limit ±Umax</span><span class="p2-arrow">→</span>
+          <span class="p2-block" id="p2diagramPlant">K / (τs+1)</span><span class="p2-arrow">→</span>
+          <span class="p2-block">True output y</span>
+        </div>
+        <div class="p2-feedback"><span>Feedback: y</span><span class="p2-arrow">→</span><span class="p2-block sensor" id="p2diagramSensor">Sensor 1 / (τs·s + 1)</span><span class="p2-arrow">→</span><span>y<sub>m</sub> back to Σ</span></div>
+      </div>
+      <div class="p2-split">
+        <div class="card controls">
+          <h3>Control the experiment</h3>
+          <div class="p2-taus-box">
+            <label for="p2taus">Sensor time constant τ<sub>s</sub> (s) <span class="val" id="p2tausV"></span></label><input type="range" id="p2taus" min="0" max="3" step="0.01" value="0.3">
+            <div class="btnrow"><button type="button" class="btn primary" id="p2animate">▶ Slow the sensor down</button></div>
+          </div>
+          <div class="btnrow">
+            <button type="button" class="btn" id="p2presetFast">Fast sensor</button>
+            <button type="button" class="btn" id="p2presetSlow">Slow sensor</button>
+            <button type="button" class="btn" id="p2presetOsc">Oscillating</button>
+            <button type="button" class="btn" id="p2presetP">P only · Kp 9</button>
+            <button type="button" class="btn" id="p2reset">Reset</button>
+          </div>
+          <hr class="p2-divider">
+          <p class="note">Choose the plant from HW1 (Module 1 or Module 3). Switching plant loads gains that suit it.</p>
+          <div class="seg" id="p2plantBtns">
+            <button type="button" class="on" data-kind="first">First order</button>
+            <button type="button" data-kind="second">Second order</button>
+          </div>
+          <h3 style="margin-top:17px" id="p2plantLabel">First-order plant</h3>
+          <label for="p2K">Plant gain K <span class="val" id="p2KV"></span></label><input type="range" id="p2K" min="0.2" max="3" step="0.1" value="1">
+          <div id="p2firstControls">
+            <label for="p2tau">Plant time constant τ (s) <span class="val" id="p2tauV"></span></label><input type="range" id="p2tau" min="0.2" max="5" step="0.1" value="1">
+          </div>
+          <div id="p2secondControls" style="display:none">
+            <label for="p2zeta">Damping ratio ζ <span class="val" id="p2zetaV"></span></label><input type="range" id="p2zeta" min="0.1" max="2" step="0.05" value="0.5">
+            <label for="p2wn">Natural frequency ωₙ (rad/s) <span class="val" id="p2wnV"></span></label><input type="range" id="p2wn" min="0.5" max="8" step="0.1" value="2">
+          </div>
+          <hr class="p2-divider">
+          <h3>PID gains</h3>
+          <label for="p2kp">Kp — proportional <span class="val" id="p2kpV"></span></label><input type="range" id="p2kp" min="0" max="20" step="0.1" value="4">
+          <label for="p2ki">Ki — integral <span class="val" id="p2kiV"></span></label><input type="range" id="p2ki" min="0" max="15" step="0.05" value="8">
+          <label for="p2kd">Kd — derivative <span class="val" id="p2kdV"></span></label><input type="range" id="p2kd" min="0" max="5" step="0.05" value="0">
+          <hr class="p2-divider">
+          <label for="p2setpoint">Setpoint step r <span class="val" id="p2setpointV"></span></label><input type="range" id="p2setpoint" min="0.5" max="5" step="0.1" value="1">
+          <label for="p2limit">Control limit Umax <span class="val" id="p2limitV"></span></label><input type="range" id="p2limit" min="1" max="100" step="1" value="50">
+          <label for="p2time">Simulation time (s) <span class="val" id="p2timeV"></span></label><input type="range" id="p2time" min="5" max="60" step="1" value="20">
+        </div>
+        <div>
+          <div class="card"><h3>True output and what the sensor reports <span class="p2-badge" id="p2badge"></span></h3><div id="p2response" class="p2-plot" aria-label="Setpoint, true output and sensor reading over time"></div><p class="note">Orange: the true output y. Blue dotted: the sensor reading y<sub>m</sub>, which is all the controller sees. Green dashed: the setpoint.</p></div>
+          <div class="card"><h3>Overshoot as the sensor gets slower</h3><div id="p2sweep" class="p2-plot-small" aria-label="Overshoot of the true output and of the sensor reading against sensor time constant"></div><p class="note">Each point is a full simulation with the current gains and a different τ<sub>s</sub>. The red zone is where the loop no longer settles; its edge is the Routh–Hurwitz threshold.</p></div>
+        </div>
+      </div>
+      <div class="card"><h3>Live metrics</h3><div class="stats" id="p2metrics"></div><p class="note" id="p2metricsNote"></p></div>
+      <div class="card"><h3>Control signal u(t)</h3><div id="p2control" class="p2-plot-small" aria-label="Control signal and actuator limits"></div><p class="note">With a slow sensor the controller keeps pushing after y has passed the setpoint, because y<sub>m</sub> still says "too low".</p></div>
+      <div class="card predict">
+        <h3>Predict, then check</h3>
+        <p class="note">Write your prediction <b>before</b> moving the sliders, then press Check. Questions use the current settings.</p>
+        <p class="qtext" id="p2qText"></p>
+        <div class="p2-inline"><input type="number" id="p2qAns" step="any" placeholder="Your answer" aria-label="Your P2 prediction"><span id="p2qUnit"></span><button class="btn primary" type="button" id="p2qCheck">Check</button><button class="btn" type="button" id="p2qNew">New question</button><span class="p2-status" id="p2qScore">Session score: 0 / 0</span></div>
+        <div id="p2qFb" class="fb"></div>
+      </div>
+      <div class="card">
+        <h3>Why a slow sensor causes overshoot</h3>
+        <p>With P control on the first-order plant, the sensor turns the loop into a second-order system:</p>
+        <div class="eqrow"><span class="eq">τ·τ<sub>s</sub>·s² + (τ + τ<sub>s</sub>)·s + 1 + K·Kp = 0</span><span class="eq">ζ = (τ + τ<sub>s</sub>) / (2√(τ·τ<sub>s</sub>(1 + K·Kp)))</span></div>
+        <p>As τ<sub>s</sub> grows from 0, ζ falls below 1 and the loop overshoots. With an integral term the equation becomes third order, τ·τ<sub>s</sub>s³ + (τ + τ<sub>s</sub> + K·Kd)s² + (1 + K·Kp)s + K·Ki = 0, and Routh–Hurwitz says it oscillates without dying out once</p>
+        <div class="eqrow"><span class="eq">τ<sub>s</sub> &gt; (τ + K·Kd)(1 + K·Kp) / (τ·K·Ki − (1 + K·Kp))</span></div>
+        <p class="note">Tip from the brief: if the loop oscillates, look at the sensor's τ<sub>s</sub> before blaming the gains. A faster sensor (or less Ki, or some Kd) restores the margin.</p>
+      </div>
+      <div class="card">
+        <h3>HW2 P2 validation checks</h3>
+        <p class="note">Reference plant K = 1, τ = 1 s, unit step. Every value below comes from the same Euler simulator that draws the plots.</p>
+        <div class="tablewrap"><table><thead><tr><th>Test</th><th>Expected</th><th>Computed</th><th>Status</th></tr></thead><tbody id="p2validationBody"></tbody></table></div>
+        <p class="note" id="p2validationStatus"></p>
+      </div>
+    </section>
+
     <!-- ===== VALIDATION ===== -->
     <section class="page" id="val">
       <div class="pagehead"><div><div class="kicker">Required by the brief</div><h1>Validation checks</h1></div></div>
@@ -621,7 +717,7 @@ ul.tight li{margin-bottom:6px}
    ========================================================= */
 const GROUP_NAME = "";
 const TEAM = [
-  { name: "Dalia Abu Baker",          role: "Module 1 — First-order time response" },
+  { name: "Dalia Abu Baker",          role: "Module 1 — First-order time response; HW2 P2 — Slow sensor in the loop" },
   { name: "Ghaleb Raed",              role: "Module  3 — Second-order response + State-space panel " },
   { name: "Hala Sarsour",             role: "Module  4 " },
   { name: "Mohammad Isam Obeidallah", role: "Modules 2 & 3 — Frequency and second-order response" }
@@ -661,6 +757,7 @@ function route(){
   if(target === 'm4') m4Show();
   if(target === 'val') renderValAll();
   if(target === 'p1' && window.P1Controller) window.P1Controller.update();
+  if(target === 'p2' && window.P2SlowSensor){ window.P2SlowSensor.update(); window.P2SlowSensor.plotSweep(); }
 }
 window.addEventListener('hashchange', route);
 
@@ -669,7 +766,7 @@ document.querySelectorAll('.themes button').forEach(b => b.onclick = () => {
   document.body.dataset.theme = b.dataset.t;
   document.querySelectorAll('.themes button').forEach(x => x.classList.toggle('on', x === b));
   try { localStorage.setItem('dyn-theme', b.dataset.t); } catch(e) {}
-  if(window.Plotly){ update(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); }
+  if(window.Plotly){ update(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); if(window.P2SlowSensor) window.P2SlowSensor.update(); }
 });
 try { const t = localStorage.getItem('dyn-theme'); if(t){ const b=document.querySelector(`.themes button[data-t="${t}"]`); if(b) b.click(); } } catch(e) {}
 
@@ -1495,7 +1592,7 @@ function loadPlotly(i){
   s.onerror=() => loadPlotly(i+1);
   document.head.appendChild(s);
 }
-function onPlotlyReady(){ update(); newQuestion(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); }
+function onPlotlyReady(){ update(); newQuestion(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); if(window.P2SlowSensor) window.P2SlowSensor.update(); }
 
 updateM2();
 updateM3();
@@ -1507,5 +1604,6 @@ newQuestion();
 loadPlotly(0);
 </script>
 <script src="p1.js"></script>
+<script src="p2.js"></script>
 </body>
 </html>

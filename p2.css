@@ -1,0 +1,24 @@
+/* Homework 2 — P2 (slow sensor in the loop). Styles are scoped to #p2 so they do not affect HW1, P1 or teammates. */
+#p2 .p2-diagram {display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;padding:12px 4px 4px}
+#p2 .p2-block {padding:11px 14px;border:2px solid var(--main);border-radius:10px;background:var(--bg);font-weight:700;text-align:center}
+#p2 .p2-block.sensor {border-color:#1565C0;color:#1565C0;background:#EEF4FC}
+#p2 .p2-arrow {font-size:1.4rem;color:var(--main-dark);font-weight:700}
+#p2 .p2-feedback {display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:.86rem}
+#p2 .p2-split {display:grid;grid-template-columns:310px minmax(0,1fr);gap:15px;align-items:start}
+#p2 .p2-split > div, #p2 .card {min-width:0}
+#p2 .p2-plot {height:405px;min-width:0}
+#p2 .p2-plot-small {height:290px;min-width:0}
+#p2 .p2-divider {border:0;border-top:1px solid var(--line);margin:15px 0}
+#p2 .p2-taus-box {margin-top:10px;padding:10px 12px;border:2px solid #1565C0;border-radius:12px;background:#EEF4FC}
+#p2 .p2-taus-box label {margin-top:0;color:#0D3C78}
+#p2 .p2-taus-box .val {color:#1565C0}
+#p2 .p2-badge {display:inline-block;margin-left:8px;padding:3px 10px;border-radius:999px;font-size:.78rem;font-weight:700;vertical-align:middle}
+#p2 .p2-badge.settles {background:#E3F3E4;color:#2E7D32}
+#p2 .p2-badge.decaying {background:#FFF4D6;color:#8A5A00}
+#p2 .p2-badge.sustained, #p2 .p2-badge.growing {background:#FDE3E3;color:#C62828}
+#p2 .p2-inline {display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+#p2 .p2-inline input[type=number] {padding:9px 10px;width:160px;border:1.5px solid var(--topaz);border-radius:10px;font:inherit}
+#p2 .p2-status {font-size:.85rem;color:var(--muted)}
+#p2 .eq {overflow-wrap:anywhere}
+@media(max-width:1050px){#p2 .p2-split{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){#p2 .p2-plot{height:350px} #p2 .p2-plot-small{height:270px} #p2 .p2-block{padding:7px 9px;font-size:.8rem} #p2 .p2-arrow{font-size:1.1rem}}
