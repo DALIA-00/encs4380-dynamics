@@ -599,7 +599,8 @@ ul.tight li{margin-bottom:6px}
         <p class="note">Solved in time with forward Euler (plant, sensor and integral stepped together). The derivative acts on the sensor reading, and the integral stops growing while the actuator is saturated (anti-windup), as in P1.</p>
       </div>
       <div class="card">
-        <h3>Closed-loop block diagram</h3>
+        <h3>Closed-loop block diagram <button class="p2-ib" type="button" data-p2k="diagram" aria-label="About the block diagram">i</button></h3>
+        <div class="p2-tip" id="p2tip-diagram"></div>
         <div class="p2-diagram" role="img" aria-label="Setpoint enters a summer, then the PID, the actuator limit and the plant, giving the true output y. The feedback path goes through a first-order sensor, whose reading ym is subtracted from the setpoint.">
           <span class="p2-block">Setpoint r</span><span class="p2-arrow">→</span>
           <span class="p2-block">Σ (+r −y<sub>m</sub>)</span><span class="p2-arrow">→</span>
@@ -612,7 +613,8 @@ ul.tight li{margin-bottom:6px}
       </div>
       <div class="p2-split">
         <div class="card controls">
-          <h3>Control the experiment</h3>
+          <h3>Control the experiment <button class="p2-ib" type="button" data-p2k="controls" aria-label="About the controls">i</button></h3>
+          <div class="p2-tip" id="p2tip-controls"></div>
           <div class="p2-taus-box">
             <label for="p2taus">Sensor time constant τ<sub>s</sub> (s) <span class="val" id="p2tausV"></span></label><input type="range" id="p2taus" min="0" max="3" step="0.01" value="0.3">
             <div class="btnrow"><button type="button" class="btn primary" id="p2animate">▶ Slow the sensor down</button></div>
@@ -650,14 +652,15 @@ ul.tight li{margin-bottom:6px}
           <label for="p2time">Simulation time (s) <span class="val" id="p2timeV"></span></label><input type="range" id="p2time" min="5" max="60" step="1" value="20">
         </div>
         <div>
-          <div class="card"><h3>True output and what the sensor reports <span class="p2-badge" id="p2badge"></span></h3><div id="p2response" class="p2-plot" aria-label="Setpoint, true output and sensor reading over time"></div><p class="note">Orange: the true output y. Blue dotted: the sensor reading y<sub>m</sub>, which is all the controller sees. Green dashed: the setpoint.</p></div>
-          <div class="card"><h3>Overshoot as the sensor gets slower</h3><div id="p2sweep" class="p2-plot-small" aria-label="Overshoot of the true output and of the sensor reading against sensor time constant"></div><p class="note">Each point is a full simulation with the current gains and a different τ<sub>s</sub>. The red zone is where the loop no longer settles; its edge is the Routh–Hurwitz threshold.</p></div>
+          <div class="card"><h3>True output and what the sensor reports <button class="p2-ib" type="button" data-p2k="response" aria-label="How to read this plot">i</button> <span class="p2-badge" id="p2badge"></span></h3><div class="p2-tip" id="p2tip-response"></div><div id="p2response" class="p2-plot" aria-label="Setpoint, true output and sensor reading over time"></div><p class="note">Orange: the true output y. Blue dotted: the sensor reading y<sub>m</sub>, which is all the controller sees. Green dashed: the setpoint.</p></div>
+          <div class="card"><h3>Overshoot as the sensor gets slower <button class="p2-ib" type="button" data-p2k="sweep" aria-label="How to read this plot">i</button></h3><div class="p2-tip" id="p2tip-sweep"></div><div id="p2sweep" class="p2-plot-small" aria-label="Overshoot of the true output and of the sensor reading against sensor time constant"></div><p class="note">Each point is a full simulation with the current gains and a different τ<sub>s</sub>. The red zone is where the loop no longer settles; its edge is the Routh–Hurwitz threshold.</p></div>
         </div>
       </div>
-      <div class="card"><h3>Live metrics</h3><div class="stats" id="p2metrics"></div><p class="note" id="p2metricsNote"></p></div>
-      <div class="card"><h3>Control signal u(t)</h3><div id="p2control" class="p2-plot-small" aria-label="Control signal and actuator limits"></div><p class="note">With a slow sensor the controller keeps pushing after y has passed the setpoint, because y<sub>m</sub> still says "too low".</p></div>
+      <div class="card"><h3>Live metrics <button class="p2-ib" type="button" data-p2k="metrics" aria-label="About the metrics">i</button></h3><div class="p2-tip" id="p2tip-metrics"></div><div class="stats" id="p2metrics"></div><p class="note" id="p2metricsNote"></p></div>
+      <div class="card"><h3>Control signal u(t) <button class="p2-ib" type="button" data-p2k="control" aria-label="How to read this plot">i</button></h3><div class="p2-tip" id="p2tip-control"></div><div id="p2control" class="p2-plot-small" aria-label="Control signal and actuator limits"></div><p class="note">With a slow sensor the controller keeps pushing after y has passed the setpoint, because y<sub>m</sub> still says "too low".</p></div>
       <div class="card predict">
-        <h3>Predict, then check</h3>
+        <h3>Predict, then check <button class="p2-ib" type="button" data-p2k="predict" aria-label="About this section">i</button></h3>
+        <div class="p2-tip" id="p2tip-predict"></div>
         <p class="note">Write your prediction <b>before</b> moving the sliders, then press Check. Questions use the current settings.</p>
         <p class="qtext" id="p2qText"></p>
         <div class="p2-inline"><input type="number" id="p2qAns" step="any" placeholder="Your answer" aria-label="Your P2 prediction"><span id="p2qUnit"></span><button class="btn primary" type="button" id="p2qCheck">Check</button><button class="btn" type="button" id="p2qNew">New question</button><span class="p2-status" id="p2qScore">Session score: 0 / 0</span></div>
@@ -672,7 +675,8 @@ ul.tight li{margin-bottom:6px}
         <p class="note">Tip from the brief: if the loop oscillates, look at the sensor's τ<sub>s</sub> before blaming the gains. A faster sensor (or less Ki, or some Kd) restores the margin.</p>
       </div>
       <div class="card">
-        <h3>HW2 P2 validation checks</h3>
+        <h3>HW2 P2 validation checks <button class="p2-ib" type="button" data-p2k="val" aria-label="About the validation checks">i</button></h3>
+        <div class="p2-tip" id="p2tip-val"></div>
         <p class="note">Reference plant K = 1, τ = 1 s, unit step. Every value below comes from the same Euler simulator that draws the plots.</p>
         <div class="tablewrap"><table><thead><tr><th>Test</th><th>Expected</th><th>Computed</th><th>Status</th></tr></thead><tbody id="p2validationBody"></tbody></table></div>
         <p class="note" id="p2validationStatus"></p>

@@ -283,11 +283,74 @@
     return m;
   }
 
+  /* ---------- "i" info boxes ----------
+     Like Module 1, each box is written from the CURRENT settings, so the
+     numbers in it change when a slider moves (open boxes re-render on update). */
+  const now = x => '<span class="now">' + x + '</span>';
+  const INFO = {
+    diagram: (p, m) => `<ul>
+      <li>Same loop as P1, with one extra block: the <b>sensor</b> in the feedback path. Σ subtracts <b>y<sub>m</sub></b> (the sensor reading), not y.</li>
+      <li>The sensor is a Homework 1 first-order system with K = 1: it needs τ<sub>s</sub> to show 63.2% of a change and 3τ<sub>s</sub> to show 95%. Right now τ<sub>s</sub> = ${now(fmt(p.taus, 2) + ' s')}, so a change in y appears on the reading after about ${now(fmt(3 * p.taus, 2) + ' s')}.</li>
+      <li>The sensor's DC gain is 1, so it delays the reading but does not change where y ends up.</li></ul>`,
+    controls: (p, m) => `<ul>
+      <li><b>τ<sub>s</sub></b> (blue box): how slow the sensor is. ${p.kind === 'first' ? 'Compare it with the plant\'s τ = ' + now(fmt(p.tau, 2) + ' s') + ': the sensor is now ' + now(p.taus === 0 ? 'ideal' : fmt(p.taus / p.tau, 2) + '× the plant\'s time constant') + '. ' : ''}τ<sub>s</sub> = 0 is an ideal sensor, the same loop as P1.</li>
+      <li><b>▶ Slow the sensor down</b>: moves τ<sub>s</sub> from 0 to 3 s in 7 s so you can watch the response change.</li>
+      <li><b>Presets</b>: Fast (0.05 s), Slow (0.8 s) and Oscillating (1.8 s) use PI with Kp = 4, Ki = 8. "P only · Kp 9" is the validation case.</li>
+      <li><b>Kp, Ki, Kd</b>: the PID gains. Ki pushes the loop toward oscillation; Kd adds damping and moves the threshold up.</li>
+      <li><b>Umax</b>: the actuator limit. A small limit slows the loop and makes it differ from the linear (Routh) prediction.</li>
+      <li><b>Simulation time</b>: make it longer if the loop is still settling at the end.</li></ul>`,
+    response: (p, m) => `<ul>
+      <li><b>Orange</b> is the real output y. <b>Blue dotted</b> is what the sensor reports, the only signal the controller sees.</li>
+      <li>The blue curve lags behind the orange one. While the reading still says "too low", the controller keeps pushing, so y goes past the setpoint.</li>
+      <li>Right now the true peak overshoot is ${now(Number.isFinite(m.trueOS) ? fmt(m.trueOS, 1) + ' %' : '— (the loop does not settle)')}, but the sensor shows only ${now(Number.isFinite(m.sensorOS) ? fmt(m.sensorOS, 1) + ' %' : '—')}. Someone watching the sensor would underestimate the overshoot.</li>
+      <li>The badge says what the loop does: settles, still dying out, sustained oscillation or growing oscillation.</li></ul>`,
+    sweep: (p, m) => {
+      let math;
+      if (p.kind === 'first' && p.ki > 0) {
+        const a = p.tau + p.K * p.kd, b = 1 + p.K * p.kp, c = p.tau * p.K * p.ki - b;
+        math = `<li>Characteristic equation: τ·τ<sub>s</sub>s³ + (τ + τ<sub>s</sub> + K·Kd)s² + (1 + K·Kp)s + K·Ki = 0. Routh: the loop is stable while (τ + τ<sub>s</sub> + K·Kd)(1 + K·Kp) &gt; τ·τ<sub>s</sub>·K·Ki.</li>
+          <li>With your numbers: τ<sub>s,crit</sub> = (τ + K·Kd)(1 + K·Kp) / (τ·K·Ki − (1 + K·Kp)) = (${fmt(a)})(${fmt(b)}) / (${fmt(p.tau * p.K * p.ki)} − ${fmt(b)}) = ${now(c > 0 ? fmt(a * b / c, 3) + ' s' : 'no limit, because the bottom is not positive')}.</li>`;
+      } else if (p.kind === 'first') {
+        const zeta = p.taus > 0 ? (p.tau + p.taus) / (2 * Math.sqrt(p.tau * p.taus * (1 + p.K * p.kp))) : NaN;
+        math = `<li>With Ki = 0 the loop is second order: τ·τ<sub>s</sub>s² + (τ + τ<sub>s</sub> + K·Kd)s + 1 + K·Kp = 0. All coefficients are positive, so it <b>never</b> goes unstable: the overshoot grows with τ<sub>s</sub> but the loop always settles.</li>
+          ${p.kd === 0 && p.taus > 0 ? `<li>ζ = (τ + τ<sub>s</sub>) / (2√(τ·τ<sub>s</sub>(1 + K·Kp))) = ${now(fmt(zeta, 3))} now. Below 1 the loop overshoots.</li>` : ''}`;
+      } else {
+        math = `<li>Second-order plant: the equation is 4th order, s·(s² + 2ζωₙs + ωₙ²)(τ<sub>s</sub>s + 1) + Kωₙ²(Kd·s² + Kp·s + Ki) = 0. The page runs the Routh test for every τ<sub>s</sub> on the axis and shades the unstable ranges. First unstable τ<sub>s</sub>: ${now(Number.isFinite(m.crit) ? fmt(m.crit, 3) + ' s' : 'none')}.</li>`;
+      }
+      return `<ul><li>Each point is a <b>full simulation</b> with the current gains and that τ<sub>s</sub>. Orange: the real overshoot. Blue: what the sensor shows.</li>
+        <li>The dashed line marks your current τ<sub>s</sub>. In the red zone the loop never settles, so no overshoot is plotted there.</li>${math}</ul>`;
+    },
+    metrics: (p, m) => `<ul>
+      <li><b>Overshoot</b> = (peak − final value) / final value. The final value is ${now(fmt(m.target, 3))}: ${p.ki > 0 ? 'with an integral term it is the setpoint r.' : 'with no integral term it is r·K·Kp/(1 + K·Kp).'}</li>
+      <li><b>Hidden overshoot</b> = true − reported: the part of the overshoot the sensor smooths away.</li>
+      <li><b>Settling time</b>: the last time y is outside ±2% of the final value.</li>
+      <li><b>Loop behaviour</b> compares how much y swings in the 3rd and 4th quarters of the run: smaller means it dies out, about the same means sustained, bigger means growing.</li>
+      <li><b>Oscillation starts at τ<sub>s</sub></b>: the Routh–Hurwitz threshold for the current gains, with no saturation.</li></ul>`,
+    control: (p, m) => `<ul>
+      <li>u = Kp·e + Ki·∫e dt − Kd·dy<sub>m</sub>/dt, clipped to ±Umax = ±${now(fmt(p.limit))}.</li>
+      <li>With a slow sensor, u is still large after y has passed the setpoint, because e = r − y<sub>m</sub> is still positive. That late push is the cause of the overshoot.</li>
+      <li>The D term uses the sensor reading, so it sees the change late too; with a very slow sensor, Kd helps less.</li>
+      <li>When u sits on a red line the actuator is saturated, and the integral stops growing (anti-windup).</li></ul>`,
+    predict: (p, m) => `<ul>
+      <li><b>Final value</b>: does the sensor change it? Look at the sensor's DC gain.</li>
+      <li><b>Critical τ<sub>s</sub></b>: use the Routh formula in the "Why a slow sensor causes overshoot" card, then press ▶ to check.</li>
+      <li><b>True overshoot</b>: compare with the P-only ζ formula, and remember the real output peaks higher than the reading.</li>
+      <li>Answers within the shown tolerance count as correct. The score is for this visit only.</li></ul>`,
+    val: (p, m) => `Each "Computed" value comes from the <b>same Euler simulator</b> that draws the plots, run with a very wide actuator limit so the loop stays linear. A PASS shows the simulator agrees with the theory: the P1 case at τ<sub>s</sub> = 0, the steady state, the P-only overshoot formula, and the Routh threshold for PI.`
+  };
+  let lastMetrics = null;
+  function renderTips() {
+    if (!lastMetrics) return;
+    const p = read();
+    document.querySelectorAll('#p2 .p2-tip.show').forEach(t => { t.innerHTML = INFO[t.id.slice(6)](p, lastMetrics); });
+  }
+
   function update() {
     const p = read(); labels(p);
     result = simulate(p);
-    renderStats(result);
+    lastMetrics = renderStats(result);
     plotResponse(result);
+    renderTips();
     scheduleSweep();
   }
   let frame = null;
@@ -422,6 +485,12 @@
     id('p2qCheck').addEventListener('click', checkQuestion);
     id('p2qNew').addEventListener('click', newQuestion);
     id('p2qAns').addEventListener('keydown', ev => { if (ev.key === 'Enter') checkQuestion(); });
+    document.querySelectorAll('#p2 .p2-ib').forEach(b => b.addEventListener('click', () => {
+      const t = id('p2tip-' + b.dataset.p2k), open = !t.classList.contains('show');
+      t.classList.toggle('show', open); b.classList.toggle('on', open);
+      b.setAttribute('aria-expanded', open);
+      if (open) t.innerHTML = INFO[b.dataset.p2k](read(), lastMetrics);
+    }));
     update(); newQuestion(); validation();
   }
   window.P2SlowSensor = {simulate, metrics, criticalTaus, validation, update, plotSweep, read};
