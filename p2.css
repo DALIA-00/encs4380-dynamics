@@ -20,5 +20,15 @@
 #p2 .p2-inline input[type=number] {padding:9px 10px;width:160px;border:1.5px solid var(--topaz);border-radius:10px;font:inherit}
 #p2 .p2-status {font-size:.85rem;color:var(--muted)}
 #p2 .eq {overflow-wrap:anywhere}
+/* "i" info buttons, same look as Module 1's (.ib / .tip). Own class names so
+   Module 1's script, which wires every .ib and .tip on the page, leaves them alone. */
+#p2 .p2-ib {width:24px;height:24px;border-radius:50%;border:1.5px solid var(--main);background:#fff;color:var(--main-dark);font:700 .8rem/1 Georgia,serif;font-style:italic;cursor:pointer;display:inline-grid;place-items:center;padding:0;margin-left:6px;vertical-align:middle}
+#p2 .p2-ib:hover, #p2 .p2-ib.on {background:var(--main);color:#fff}
+#p2 .p2-tip {display:none;position:relative;background:var(--champ);border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:.88rem;line-height:1.55;font-weight:400}
+#p2 .p2-tip.show {display:block;animation:fade .2s ease}
+#p2 .p2-tip::before {content:"";position:absolute;top:-7px;left:22px;width:14px;height:14px;background:var(--champ);transform:rotate(45deg)}
+#p2 .p2-tip ul {margin:4px 0 0;padding-left:18px}
+#p2 .p2-tip li {margin-bottom:4px}
+#p2 .p2-tip .now {color:var(--main-dark);font-weight:700}
 @media(max-width:1050px){#p2 .p2-split{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){#p2 .p2-plot{height:350px} #p2 .p2-plot-small{height:270px} #p2 .p2-block{padding:7px 9px;font-size:.8rem} #p2 .p2-arrow{font-size:1.1rem}}
