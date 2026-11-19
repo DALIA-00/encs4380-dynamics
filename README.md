@@ -10,7 +10,7 @@ Interactive web toolkit for sensor dynamic characteristics (ENCS4380 Interfacing
 
 | Member | Module |
 |---|---|
-| Dalia Abu Baker| Module 1 — First-order time response |
+| Dalia Abu Baker| Module 1 — First-order time response; HW2 P2 — A slow sensor in the loop |
 | Mohammad Obeidallah| Module 2 — First-order frequency response |
 | Ghaleb Shakhsheer | HW1 Module 3 — Second-order response + state-space panel; HW2 P1 — PID playground |
 | Hala Sarsour | Module 4 — "Guess the sensor" challenge |
@@ -91,6 +91,8 @@ Static HTML + JavaScript, plots with [Plotly.js](https://plotly.com/javascript/)
 
 An AI assistant (Claude) was used to help write the Module 1 page code and this README. All formulas were checked against the lecture slides and the validation numbers.
 
+HW2 P2: Claude (Anthropic) was used to help write the P2 page (`p2.js`, `p2.css`, the P2 section of `index.html`) and its README entry. The Routh–Hurwitz threshold and the P-only damping formula come from the closed-loop characteristic equation and are checked by the validation table on the page.
+
 
 ---
 
@@ -107,4 +109,15 @@ An AI assistant (Claude) was used to help write the Module 1 page code and this 
 **P1 source files:** `p1.js` (simulation, plots, metrics, validation), `p1.css` (styles), plus the new P1 page/navigation and script link in `index.html`.
 
 **Note:** P1 uses normalized actuator commands. The real Micromouse motor model and the physical 0–100% PWM constraint belong in the team’s separate *My System* page. P2, P3 and P4 are separate teammate modules; they are not included in this P1 branch.
+
+- **P2 — A slow sensor in the loop (Dalia Abu Baker):** [Open P2](https://dalia-00.github.io/encs4380-dynamics/#p2). Issue #7.
+- A first-order sensor `1/(τs·s + 1)` sits in the feedback path. The controller only sees the sensor reading `ym`: `e = r − ym`, `u = Kp·e + Ki·∫e dt − Kd·dym/dt`.
+- Same plants as P1 (HW1 Module 1 first order, Module 3 second order), sensor time constant `τs` slider, PID gains, setpoint, actuator limit and simulation time.
+- **True output `y` and sensor reading `ym` on the same plot**, plus the control signal. A "Slow the sensor down" button animates `τs` from 0 to 3 s so the move to oscillation is visible.
+- **Overshoot vs `τs` plot:** each point is a full simulation; the range where the loop no longer settles is shaded, with its edge from Routh–Hurwitz. For the first-order plant: `τ·τs·s³ + (τ + τs + K·Kd)s² + (1 + K·Kp)s + K·Ki = 0`, so the loop oscillates once `τs > (τ + K·Kd)(1 + K·Kp) / (τ·K·Ki − (1 + K·Kp))`.
+- Live metrics: true overshoot, the overshoot the sensor reports, the hidden difference, true settling time, steady-state error, loop behaviour (settles / sustained / growing oscillation).
+- Forward Euler simulation of plant, sensor and integral together (no closed-form curves). Derivative on the sensor reading, conditional-integration anti-windup.
+- "Predict, then check" questions (final value, critical `τs`, true overshoot) and 5 validation checks computed by the simulator: `τs = 0` reproduces P1's `Kp = 9` case; a slow sensor does not change the steady state; with P only the sensor reading is a pure second-order response, so its overshoot matches `exp(−πζ/√(1−ζ²))` with `ζ = (τ + τs)/(2√(τ·τs(1 + K·Kp)))`; the true output overshoots more than the sensor shows; and for PI `Kp = 4, Ki = 8` the loop settles below and oscillates above `τs,crit = 5/3 s`.
+
+**P2 source files:** `p2.js` (simulation, Routh analysis, plots, metrics, questions, validation), `p2.css` (styles scoped to `#p2`), plus the P2 page, menu link, home-page card and script link in `index.html`. P1's files are unchanged.
 
