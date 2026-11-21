@@ -11,7 +11,7 @@ Interactive web toolkit for sensor dynamic characteristics (ENCS4380 Interfacing
 | Member | Module |
 |---|---|
 | Dalia Abu Baker| Module 1 — First-order time response; HW2 P2 — A slow sensor in the loop |
-| Mohammad Obeidallah| Module 2 — First-order frequency response |
+| Mohammad Obeidallah | Module 2 — First-order frequency response; HW2 P3 — Digital PID |
 | Ghaleb Shakhsheer | HW1 Module 3 — Second-order response + state-space panel; HW2 P1 — PID playground |
 | Hala Sarsour | Module 4 — "Guess the sensor" challenge |
 
@@ -121,4 +121,21 @@ HW2 P2: Claude (Anthropic) was used to help write the P2 page (`p2.js`, `p2.css`
 - "Predict, then check" questions (final value, critical `τs`, true overshoot) and 5 validation checks computed by the simulator: `τs = 0` reproduces P1's `Kp = 9` case; a slow sensor does not change the steady state; with P only the sensor reading is a pure second-order response, so its overshoot matches `exp(−πζ/√(1−ζ²))` with `ζ = (τ + τs)/(2√(τ·τs(1 + K·Kp)))`; the true output overshoots more than the sensor shows; and for PI `Kp = 4, Ki = 8` the loop settles below and oscillates above `τs,crit = 5/3 s`.
 
 **P2 source files:** `p2.js` (simulation, Routh analysis, plots, metrics, questions, validation), `p2.css` (styles scoped to `#p2`), plus the P2 page, menu link, home-page card and script link in `index.html`. P1's files are unchanged.
+
+
+- **P3 — Digital PID (Mohammad Obeidallah):** [Open P3](https://dalia-00.github.io/encs4380-dynamics/#p3). Issue #10.
+- Implements a discrete-time PID controller with adjustable sampling time Ts and gains Kp, Ki, and Kd.
+- Supports first-order and second-order plants from Homework 1, with adjustable plant parameters and setpoint.
+- Simulates the closed-loop response using forward Euler integration and zero-order hold between sampling instants.
+- Displays the plant output versus setpoint, sampled measurements, and stair-step control signal with actuator limits.
+- Shows the effect of increasing Ts on overshoot, tracking error, and stability.
+- Includes an Anti-Windup ON/OFF option to demonstrate the effect of integral accumulation during actuator saturation.
+- Displays live performance metrics: rise time, overshoot, settling time, end-of-run error, and saturated samples.
+- Includes a "Predict, then check" activity with interactive questions and a session score.
+- Generates Arduino PID loop code using the current controller settings, with a Copy Code button.
+
+**P3 source files:** `p3.js` (digital PID simulation, plots, performance metrics, Arduino code generation), `p3.css` (styles), and the P3 section/navigation in `index.html`.
+
+**GitHub:** Issue #10, Pull Request #11.
+
 
