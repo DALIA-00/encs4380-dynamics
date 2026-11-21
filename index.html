@@ -7,6 +7,7 @@
 <meta name="description" content="ENCS4380 Homework 1 - interactive toolkit for sensor dynamic characteristics">
 <link rel="stylesheet" href="p1.css">
 <link rel="stylesheet" href="p2.css">
+<link rel="stylesheet" href="p3.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
@@ -196,7 +197,7 @@ ul.tight li{margin-bottom:6px}
       </div>
       <div>
         <b>Dynamics Toolkit</b>
-        <small>ENCS4380 · Homework 1</small>
+        <small>ENCS4380 · Homeworks 1 &amp; 2</small>
       </div>
     </div>
 
@@ -210,6 +211,7 @@ ul.tight li{margin-bottom:6px}
       <div class="side-label">Control · Homework 2</div>
       <a href="#p1" data-page="p1"><span class="num">P1</span>PID playground<span class="tag">Live</span></a>
       <a href="#p2" data-page="p2"><span class="num">P2</span>Slow sensor in the loop<span class="tag">Live</span></a>
+      <a href="#p3" data-page="p3"><span class="num">P3</span>Digital PID<span class="tag">Live</span></a>
       <a href="#val" data-page="val"><span class="num">✓</span>Validation checks</a>
       <a href="#team" data-page="team"><span class="num">☺</span>Team</a>
     </nav>
@@ -281,8 +283,9 @@ ul.tight li{margin-bottom:6px}
         <div class="modcards">
           <a class="modcard" href="#p1"><div class="n">P1</div><b>PID playground</b><small>Live P, I, D gains · feedback response · actuator limit · validation</small><br><span class="status live">Live</span></a>
           <a class="modcard" href="#p2"><div class="n">P2</div><b>A slow sensor in the loop</b><small>True output vs sensor reading · sensor τs · overshoot until oscillation</small><br><span class="status live">Live</span></a>
+          <a class="modcard" href="#p3"><div class="n">P3</div><b>Digital PID</b><small>Sampling time · staircase control · anti-windup · Arduino sketch</small><br><span class="status live">Live</span></a>
         </div>
-        <p class="note">P3 (digital PID) and P4 (tuning challenge) are coming next.</p>
+        <p class="note">P4 (tuning challenge) is coming next.</p>
       </div>
     </section>
 
@@ -683,6 +686,47 @@ ul.tight li{margin-bottom:6px}
       </div>
     </section>
 
+    <!-- ===== HOMEWORK 2: P3 DIGITAL PID ===== -->
+    <section class="page" id="p3">
+      <div class="pagehead"><div><div class="kicker">Homework 2 · P3</div><h1>Digital PID · sampling and anti-windup</h1></div><div class="owner">Built by Mohammad Isam Obeidallah</div></div>
+      <div class="card">
+        <p>A digital controller reads the feedback at times <b>t = kT<sub>s</sub></b>, calculates a new command, and holds that command constant until the next sample. Increase the sampling time to see the stair-steps become wider and the response become less accurate or unstable.</p>
+        <div class="eqrow"><span class="eq p3-equation">u[k] = Kp·e[k] + Ki·Ts·Σe[j] + Kd·(e[k] − e[k−1])/Ts</span><span class="eq p3-equation" id="p3plantEq">τ dy/dt + y = K u</span></div>
+        <p class="note">The plant is integrated using forward Euler between sampling instants. The PID equation is evaluated only once every T<sub>s</sub> seconds. A zero-order hold makes u[k] a staircase. The derivative uses error differences, as in the assignment.</p>
+      </div>
+      <div class="p3-split">
+        <div class="card controls">
+          <h3>Sampling and control parameters</h3>
+          <label for="p3Ts">Sampling time Ts (s) <span class="val" id="p3TsV"></span></label><input type="range" id="p3Ts" min="0.02" max="1" step="0.01" value="0.1">
+          <div class="btnrow"><button class="btn" type="button" id="p3presetFast">Fast · 20 ms</button><button class="btn" type="button" id="p3presetSlow">Slow · 750 ms</button></div>
+          <p class="p3-hint" id="p3sampling"></p>
+          <label for="p3kp">Kp — proportional <span class="val" id="p3kpV"></span></label><input type="range" id="p3kp" min="0" max="20" step="0.1" value="1">
+          <label for="p3ki">Ki — integral <span class="val" id="p3kiV"></span></label><input type="range" id="p3ki" min="0" max="15" step="0.1" value="1">
+          <label for="p3kd">Kd — derivative <span class="val" id="p3kdV"></span></label><input type="range" id="p3kd" min="0" max="3" step="0.05" value="0">
+          <label class="p3-switch" for="p3aw"><input type="checkbox" id="p3aw" checked> Anti-windup enabled</label>
+          <hr class="p3-divider">
+          <h3>Plant from Homework 1</h3>
+          <div class="seg" id="p3plantBtns"><button class="on" type="button" data-kind="first">First order</button><button type="button" data-kind="second">Second order</button></div>
+          <label for="p3K">Plant gain K <span class="val" id="p3KV"></span></label><input type="range" id="p3K" min="0.2" max="3" step="0.1" value="1">
+          <div id="p3first"><label for="p3tau">Plant τ (s) <span class="val" id="p3tauV"></span></label><input type="range" id="p3tau" min="0.2" max="5" step="0.1" value="1"></div>
+          <div id="p3second" style="display:none"><label for="p3zeta">Damping ratio ζ <span class="val" id="p3zetaV"></span></label><input type="range" id="p3zeta" min="0.1" max="2" step="0.05" value="0.5"><label for="p3wn">Natural frequency ωₙ (rad/s) <span class="val" id="p3wnV"></span></label><input type="range" id="p3wn" min="0.5" max="8" step="0.1" value="2"></div>
+          <hr class="p3-divider">
+          <label for="p3setpoint">Step setpoint r <span class="val" id="p3setpointV"></span></label><input type="range" id="p3setpoint" min="0.5" max="5" step="0.1" value="1">
+          <label for="p3limit">Actuator limit ±Umax <span class="val" id="p3limitV"></span></label><input type="range" id="p3limit" min="0.5" max="20" step="0.5" value="5">
+          <label for="p3time">Simulation time (s) <span class="val" id="p3timeV"></span></label><input type="range" id="p3time" min="5" max="60" step="1" value="12">
+          <div class="btnrow"><button class="btn" type="button" id="p3presetWindup">Try saturation</button><button class="btn primary" type="button" id="p3reset">Reset</button></div>
+        </div>
+        <div>
+          <div class="card"><h3>Plant output versus setpoint</h3><div id="p3response" class="p3-plot" aria-label="Digital PID output and setpoint, compared against fast sampling"></div><p class="p3-compare-note">The gray reference always uses Ts = 0.02 s with the same gains. Dots mark the actual measurements. Under actuator saturation, a purple dashed curve compares anti-windup OFF.</p></div>
+          <div class="card"><h3>Stair-step control signal (zero-order hold)</h3><div id="p3control" class="p3-small" aria-label="Staircase digital control and positive and negative actuator limits"></div><p class="note">Each horizontal step is one constant actuator command. Red dashed lines show the clipping limits.</p></div>
+          <div class="card"><h3>What happens as Ts increases?</h3><div id="p3sweep" class="p3-small" aria-label="End-of-run error for a range of sampling intervals"></div><p class="note">Each point is a new full simulation with the same gains and plant, changing only Ts. Overshoot and the final tracking error are shown separately. A longer Ts can cause poorer tracking or oscillations; the change need not be monotonic.</p></div>
+        </div>
+      </div>
+      <div class="card"><h3>Live performance</h3><div class="stats" id="p3metrics"></div><p class="note" id="p3warning"></p></div>
+      <div class="card predict"><h3>Predict, then check</h3><p class="qtext">With the current gains and sampling time, what will the plant output be at <b>t = <span id="p3qTime">1</span> s</b>?</p><div class="p3-inline"><input id="p3qAnswer" type="number" step="any" placeholder="Your predicted y" aria-label="Predicted output"><button class="btn primary" type="button" id="p3check">Check</button><button class="btn" type="button" id="p3new">New question</button><span class="p3-status" id="p3qScore">Session score: 0 / 0</span></div><div class="fb" id="p3qFeedback"></div></div>
+      <div class="card"><div class="p3-headline"><h3>Generated Arduino PID loop</h3><button class="btn primary" type="button" id="p3copy">Copy code</button></div><p class="note">The sketch uses your current gains and Ts, with the same derivative and conditional-integration anti-windup as the browser. Example uses analog input A0 and H-bridge output pins 7, 8 and PWM 9. Sensor scaling and motor pins must be adapted to real hardware.</p><pre class="p3-code" id="p3arduino" aria-label="Generated Arduino C++ code"></pre></div>
+    </section>
+
     <!-- ===== VALIDATION ===== -->
     <section class="page" id="val">
       <div class="pagehead"><div><div class="kicker">Required by the brief</div><h1>Validation checks</h1></div></div>
@@ -724,7 +768,7 @@ const TEAM = [
   { name: "Dalia Abu Baker",          role: "Module 1 — First-order time response; HW2 P2 — Slow sensor in the loop" },
   { name: "Ghaleb Raed",              role: "Module  3 — Second-order response + State-space panel " },
   { name: "Hala Sarsour",             role: "Module  4 " },
-  { name: "Mohammad Isam Obeidallah", role: "Modules 2 & 3 — Frequency and second-order response" }
+  { name: "Mohammad Isam Obeidallah", role: "HW1 Modules 2 & 3; HW2 P3 — Digital PID" }
 ];
 /* Who built each module (shown at the top of each module page) */
 const MODULE_OWNERS = {
@@ -762,6 +806,7 @@ function route(){
   if(target === 'val') renderValAll();
   if(target === 'p1' && window.P1Controller) window.P1Controller.update();
   if(target === 'p2' && window.P2SlowSensor){ window.P2SlowSensor.update(); window.P2SlowSensor.plotSweep(); }
+  if(target === 'p3' && window.P3DigitalPID) window.P3DigitalPID.update();
 }
 window.addEventListener('hashchange', route);
 
@@ -770,7 +815,7 @@ document.querySelectorAll('.themes button').forEach(b => b.onclick = () => {
   document.body.dataset.theme = b.dataset.t;
   document.querySelectorAll('.themes button').forEach(x => x.classList.toggle('on', x === b));
   try { localStorage.setItem('dyn-theme', b.dataset.t); } catch(e) {}
-  if(window.Plotly){ update(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); if(window.P2SlowSensor) window.P2SlowSensor.update(); }
+  if(window.Plotly){ update(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); if(window.P2SlowSensor) window.P2SlowSensor.update(); if(window.P3DigitalPID) window.P3DigitalPID.update(); }
 });
 try { const t = localStorage.getItem('dyn-theme'); if(t){ const b=document.querySelector(`.themes button[data-t="${t}"]`); if(b) b.click(); } } catch(e) {}
 
@@ -1596,7 +1641,7 @@ function loadPlotly(i){
   s.onerror=() => loadPlotly(i+1);
   document.head.appendChild(s);
 }
-function onPlotlyReady(){ update(); newQuestion(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); if(window.P2SlowSensor) window.P2SlowSensor.update(); }
+function onPlotlyReady(){ update(); newQuestion(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); if(window.P2SlowSensor) window.P2SlowSensor.update(); if(window.P3DigitalPID) window.P3DigitalPID.update(); }
 
 updateM2();
 updateM3();
@@ -1609,5 +1654,6 @@ loadPlotly(0);
 </script>
 <script src="p1.js"></script>
 <script src="p2.js"></script>
+<script src="p3.js"></script>
 </body>
 </html>
