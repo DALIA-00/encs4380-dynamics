@@ -1,0 +1,21 @@
+/* Homework 2 — P3 Digital PID. Every selector is scoped to #p3. */
+#p3 .p3-split{display:grid;grid-template-columns:315px minmax(0,1fr);gap:15px;align-items:start}
+#p3 .p3-split>*,#p3 .card{min-width:0}
+#p3 .p3-plot{height:370px;min-width:0}
+#p3 .p3-small{height:285px;min-width:0}
+#p3 .p3-divider{border:0;border-top:1px solid var(--line);margin:15px 0}
+#p3 .p3-inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#p3 .p3-inline input[type=number]{padding:9px 10px;width:150px;max-width:100%;border:1.5px solid var(--topaz);border-radius:10px;font:inherit}
+#p3 .p3-switch{display:flex;align-items:center;gap:9px;margin:12px 0;font-weight:600}
+#p3 .p3-switch input{width:18px;height:18px;accent-color:var(--main)}
+#p3 .p3-code{background:#1d232a;color:#e8eef6;border-radius:12px;padding:17px;overflow-x:auto;font:12px/1.55 'JetBrains Mono',monospace;white-space:pre;max-height:480px}
+#p3 .p3-hint{border-left:4px solid var(--gold);background:var(--bg);padding:10px 13px;border-radius:8px;margin:10px 0;color:var(--muted)}
+#p3 .p3-badge{background:var(--champ);color:var(--main-dark);border-radius:999px;padding:3px 10px;font-weight:700;font-size:.79rem}
+#p3 .p3-status{font-size:.84rem;color:var(--muted)}
+#p3 .p3-warn{color:var(--bad);font-weight:700}
+#p3 .p3-equation{font-size:.95rem;overflow-wrap:anywhere}
+#p3 .p3-headline{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#p3 .p3-compare-note{font-size:.88rem;color:var(--muted)}
+#p3 button:focus-visible,#p3 input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+@media(max-width:1050px){#p3 .p3-split{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){#p3 .p3-plot{height:340px}#p3 .p3-small{height:270px}}
