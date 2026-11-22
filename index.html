@@ -8,9 +8,11 @@
 <link rel="stylesheet" href="p1.css">
 <link rel="stylesheet" href="p2.css">
 <link rel="stylesheet" href="p3.css">
+<link rel="stylesheet" href="p4.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
 <style>
 /* ===== Palette (orange shades) =====
    Burnt #CC5500 · Bright #E24C00 · Alloy #C35214 · Goldfish #FF9913 · Pastel #FEBA4F
@@ -212,6 +214,7 @@ ul.tight li{margin-bottom:6px}
       <a href="#p1" data-page="p1"><span class="num">P1</span>PID playground<span class="tag">Live</span></a>
       <a href="#p2" data-page="p2"><span class="num">P2</span>Slow sensor in the loop<span class="tag">Live</span></a>
       <a href="#p3" data-page="p3"><span class="num">P3</span>Digital PID<span class="tag">Live</span></a>
+      <a href="#p4" data-page="p4"><span class="num">P4</span>Tuning challenge<span class="tag">Live</span></a>
       <a href="#val" data-page="val"><span class="num">✓</span>Validation checks</a>
       <a href="#team" data-page="team"><span class="num">☺</span>Team</a>
     </nav>
@@ -284,6 +287,7 @@ ul.tight li{margin-bottom:6px}
           <a class="modcard" href="#p1"><div class="n">P1</div><b>PID playground</b><small>Live P, I, D gains · feedback response · actuator limit · validation</small><br><span class="status live">Live</span></a>
           <a class="modcard" href="#p2"><div class="n">P2</div><b>A slow sensor in the loop</b><small>True output vs sensor reading · sensor τs · overshoot until oscillation</small><br><span class="status live">Live</span></a>
           <a class="modcard" href="#p3"><div class="n">P3</div><b>Digital PID</b><small>Sampling time · staircase control · anti-windup · Arduino sketch</small><br><span class="status live">Live</span></a>
+          <a class="modcard" href="#p4"><div class="n">P4</div><b>Tuning challenge</b><small>PID tuning challenge · score your solution</small><br><span class="status live">Live</span></a>
         </div>
         <p class="note">P4 (tuning challenge) is coming next.</p>
       </div>
@@ -726,6 +730,110 @@ ul.tight li{margin-bottom:6px}
       <div class="card predict"><h3>Predict, then check</h3><p class="qtext">With the current gains and sampling time, what will the plant output be at <b>t = <span id="p3qTime">1</span> s</b>?</p><div class="p3-inline"><input id="p3qAnswer" type="number" step="any" placeholder="Your predicted y" aria-label="Predicted output"><button class="btn primary" type="button" id="p3check">Check</button><button class="btn" type="button" id="p3new">New question</button><span class="p3-status" id="p3qScore">Session score: 0 / 0</span></div><div class="fb" id="p3qFeedback"></div></div>
       <div class="card"><div class="p3-headline"><h3>Generated Arduino PID loop</h3><button class="btn primary" type="button" id="p3copy">Copy code</button></div><p class="note">The sketch uses your current gains and Ts, with the same derivative and conditional-integration anti-windup as the browser. Example uses analog input A0 and H-bridge output pins 7, 8 and PWM 9. Sensor scaling and motor pins must be adapted to real hardware.</p><pre class="p3-code" id="p3arduino" aria-label="Generated Arduino C++ code"></pre></div>
     </section>
+<!--================HW 2:P4==========================-->
+    <section class="page" id="p4">
+      <div class="pagehead">
+        <div><div class="kicker">Module P4</div><h1>PID tuning challenge</h1></div>
+        <div class="owner" id="p4owner"></div>
+      </div>
+
+      <p class="note" style="margin-top:0">A hidden plant, a specification, and three gain sliders. Tune the controller until every part of the spec passes, then submit for your score.</p>
+
+      <div class="card scorebar">
+        <div>Round: <span id="p4round">0</span></div>
+        <div>Last: <span id="p4last">–</span></div>
+        <div>Session score: <span id="p4total">0</span> / <span id="p4max">0</span></div>
+      </div>
+
+      <div class="card">
+        <h3>How it works</h3>
+        <p>The page picks a hidden plant at random, first order (random K and τ) or second order (random ζ and ωₙ, K = 1), the same kinds of sensor as in Homework 1. The loop applies a unit step to the setpoint and is simulated with <b>RK4</b>.</p>
+        <div class="eqrow">
+          <span class="eq">u = Kp·e + Ki·∫e dt − Kd·(dy/dt)</span>
+          <span class="eq">e = r − y, r = 1</span>
+        </div>
+        <p class="note">The derivative acts on the measured output (through a small filter), not on the error, so a step in the setpoint does not cause a spike. Study the open-loop test below with your Homework 1 methods to work out what kind of plant you are controlling.</p>
+      </div>
+
+      <div class="card">
+        <h3>Open-loop test of the hidden plant</h3>
+        <p class="note">The plant's response to a unit step on u, with some noise. Use it as a clue, just like in Module 4 of Homework 1.</p>
+        <div id="p4plotOL" class="plot short"></div>
+      </div>
+
+      <div class="card">
+        <h3>Specification</h3>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Spec part</th><th>Requirement</th><th>Your design</th><th>Now</th></tr></thead>
+            <tbody id="p4specBody"></tbody>
+          </table>
+        </div>
+        <p id="p4specSummary" style="font-weight:700"></p>
+      </div>
+
+      <div class="layout">
+        <div class="card controls">
+          <h3>Your gains</h3>
+          <label for="p4Kp">Kp <span class="val" id="p4Kpv"></span></label>
+          <input type="range" id="p4Kp" min="0" max="20" step="0.05" value="1">
+          <label for="p4Ki">Ki <span class="val" id="p4Kiv"></span></label>
+          <input type="range" id="p4Ki" min="0" max="40" step="0.05" value="0">
+          <label for="p4Kd">Kd <span class="val" id="p4Kdv"></span></label>
+          <input type="range" id="p4Kd" min="0" max="10" step="0.05" value="0">
+          <div class="btnrow">
+            <button class="btn primary" id="p4submit" type="button">Submit tuning</button>
+            <button class="btn" id="p4hintBtn" type="button">Show hint</button>
+            <button class="btn" id="p4newBtn" type="button">New plant</button>
+            <button class="btn" id="p4zeroBtn" type="button">Reset gains</button>
+          </div>
+          <div class="fb" id="p4fb"></div>
+          <ul class="tight" id="p4hints"></ul>
+        </div>
+
+        <div class="card">
+          <h3>Closed-loop step response</h3>
+          <p class="note">Dotted vertical line: settling-time limit. Dashed horizontal line: overshoot limit. Shaded band: ±2% around the setpoint. Drag to zoom, double-click to reset.</p>
+          <div id="p4plotY" class="plot"></div>
+          <h3 style="margin-top:14px">Control signal u</h3>
+          <p class="note">Dashed line: the control-signal limit from the spec.</p>
+          <div id="p4plotU" class="plot short"></div>
+        </div>
+      </div>
+
+      <div class="card" id="p4revealCard" style="display:none">
+        <h3>Reveal</h3>
+        <div class="stats" id="p4revealStats"></div>
+        <p id="p4revealSummary" style="font-weight:700"></p>
+      </div>
+
+      <div class="card predict">
+        <h3>Predict, then check</h3>
+        <p class="note">Choose an answer <b>before</b> touching the sliders, then press Check. The page simulates the loop with your current gains to find the truth.</p>
+        <p id="p4qText" style="font-size:1rem"></p>
+        <div id="p4qOpts"></div>
+        <div class="btnrow">
+          <button class="btn primary" id="p4qCheck" type="button">Check</button>
+          <button class="btn" id="p4qNew" type="button">New question</button>
+        </div>
+        <div class="fb" id="p4qFb"></div>
+        <p class="note" id="p4qScore"></p>
+      </div>
+
+      <div class="card">
+        <h3>Scoring</h3>
+        <p class="note">The spec has four parts: overshoot, settling time (2% band), steady-state error (at most 1% of the setpoint) and the peak of the control signal. Each part you pass is worth 25 points, so a round is worth 100. A loop that blows up fails every part. After you submit, the page shows one design that meets the spec.</p>
+      </div>
+    </section>
+
+
+
+
+
+
+
+
+
 
     <!-- ===== VALIDATION ===== -->
     <section class="page" id="val">
@@ -767,7 +875,7 @@ const GROUP_NAME = "";
 const TEAM = [
   { name: "Dalia Abu Baker",          role: "Module 1 — First-order time response; HW2 P2 — Slow sensor in the loop" },
   { name: "Ghaleb Raed",              role: "Module  3 — Second-order response + State-space panel " },
-  { name: "Hala Sarsour",             role: "Module  4 " },
+  { name: "Hala Sarsour",             role: "Module  4; P4 - tuning challenge " },
   { name: "Mohammad Isam Obeidallah", role: "HW1 Modules 2 & 3; HW2 P3 — Digital PID" }
 ];
 /* Who built each module (shown at the top of each module page) */
@@ -807,6 +915,7 @@ function route(){
   if(target === 'p1' && window.P1Controller) window.P1Controller.update();
   if(target === 'p2' && window.P2SlowSensor){ window.P2SlowSensor.update(); window.P2SlowSensor.plotSweep(); }
   if(target === 'p3' && window.P3DigitalPID) window.P3DigitalPID.update();
+  if(target === 'p4' && window.P4Tuning) window.P4Tuning.update();
 }
 window.addEventListener('hashchange', route);
 
@@ -1641,7 +1750,7 @@ function loadPlotly(i){
   s.onerror=() => loadPlotly(i+1);
   document.head.appendChild(s);
 }
-function onPlotlyReady(){ update(); newQuestion(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); if(window.P2SlowSensor) window.P2SlowSensor.update(); if(window.P3DigitalPID) window.P3DigitalPID.update(); }
+function onPlotlyReady(){ update(); newQuestion(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); if(window.P2SlowSensor) window.P2SlowSensor.update(); if(window.P3DigitalPID) window.P3DigitalPID.update();if (window.p4Redraw) p4Redraw(); }
 
 updateM2();
 updateM3();
@@ -1655,5 +1764,6 @@ loadPlotly(0);
 <script src="p1.js"></script>
 <script src="p2.js"></script>
 <script src="p3.js"></script>
+<script src="p4.js"></script>
 </body>
 </html>

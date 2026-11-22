@@ -1,0 +1,8 @@
+/* P4 additions (scoped to #p4, uses your existing colour tokens) */
+#p4 .scorebar{display:flex;gap:18px;flex-wrap:wrap;font-weight:700}
+#p4 .plot{height:330px}
+#p4 .plot.short{height:250px}
+@media (max-width:600px){#p4 .plot{height:370px}#p4 .plot.short{height:300px}}
+#p4 .predict label.opt{display:block;margin:6px 0;cursor:pointer}
+#p4 .predict label.opt input{margin-right:8px;accent-color:var(--main)}
+#p4 button.btn:disabled{opacity:.45;cursor:not-allowed}
