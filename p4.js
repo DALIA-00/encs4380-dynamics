@@ -206,7 +206,7 @@ function submit(){
 const HINTS = [
   'Start with Kp only (Ki = 0, Kd = 0). Raise it until the response is fast enough, but watch the control-signal limit.',
   'Proportional control alone always leaves a steady-state error. Add Ki to remove it. Too much Ki makes the overshoot grow.',
-  'Overshoot too high? Lower Ki, or add a little Kd. It acts on the measured output and calms the oscillation.',
+  'Overshoot too high? Lower Ki or raise Kp. On a second-order (oscillating) plant a little Kd adds damping; on a first-order plant Kd mostly just slows the response.',
   'A bigger plant gain K means you need a smaller Kp for the same loop gain K·Kp. Estimate K from the open-loop test first.'
 ];
 function showHint(){
