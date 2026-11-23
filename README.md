@@ -6,15 +6,15 @@ Interactive web toolkit for sensor dynamic characteristics (Homework 1) and feed
 
 **Live page:** [https://dalia-00.github.io/encs4380-dynamics/](https://dalia-00.github.io/encs4380-dynamics/)
 
-## Team
+## Team 21 (Xeno25)
 
-| Member | Module |
-|---|---|
-| Dalia Abu Baker| Module 1 — First-order time response; HW2 P2 — A slow sensor in the loop |
-| Mohammad Obeidallah | Module 2 — First-order frequency response; HW2 P3 — Digital PID |
-| Ghaleb Shakhsheer | HW1 Module 3 — Second-order response + state-space panel; HW2 P1 — PID playground |
-| Hala Sarsour | Module 4 — "Guess the sensor" challenge; HW2 P4 — Tuning challenge |
-| Whole team (T21) | HW2 "My system" — micromouse drive-motor speed loop |
+| Member | Student ID | Module |
+|---|---|---|
+| Dalia Abu Baker | 1230357 | Module 1 — First-order time response; HW2 P2 — A slow sensor in the loop |
+| Mohammad Obeidallah | 1230727 | Module 2 — First-order frequency response; HW2 P3 — Digital PID |
+| Ghaleb Shakhsheer | 1230075 | HW1 Module 3 — Second-order response + state-space panel; HW2 P1 — PID playground |
+| Hala Sarsour | 1230058 | Module 4 — "Guess the sensor" challenge; HW2 P4 — Tuning challenge |
+| Whole team | — | HW2 "My system" — micromouse drive-motor speed loop |
 
 ## Module 1 — First-order time response (thermometer)
 
