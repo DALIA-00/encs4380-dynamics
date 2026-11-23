@@ -171,6 +171,10 @@ HW2 P2: Claude (Anthropic) was used to help write the P2 page (`p2.js`, `p2.css`
 
 **Design:** PI by pole placement, ζ = 0.7 and ts = 0.15 s → **Kp ≈ 94 %/(m/s), Ki ≈ 4975 %/(m/s·s)**, Ts = 5 ms. Simulated (digital PI, ZOH, forward Euler): 7.1 % overshoot, 0.13 s settling, 0 % error, peak PWM 64 %: every part of the spec passes. Dashed curves show the same controller if the real τ is 0.5× or 1.5× the estimate.
 
+**Step test card:** plots the open-loop step response our estimate predicts (60 % PWM: 0.68 m/s, τ = 38.6 ms marked at 63.2 %). Pasting the encoder log adds the measured points, the fitted curve and the estimate error on the same plot.
+
+**Left vs right wheel:** two motors with a ±δ mismatch in K, same command. With P only they settle at different speeds (about 12.6° heading error per cell for ±10 %); with PI both reach r exactly. This shows why the spec asks for zero steady-state error.
+
 **Generated code:** an ESP32 (Arduino core) sketch with x4 quadrature encoder interrupts, the same PI and anti-windup as the simulation, DRV8833 PWM and `t, v, u` serial logging, so the real response can be compared with the simulation (bonus). Pins are placeholders until `robot_config.h` is filled in.
 
 **Source files:** `sys.js` (model, design, simulation, spec check, step-test fit, code generator, HW2 validation checks), `sys.css`, and the My system section, menu link and home card in `index.html`.

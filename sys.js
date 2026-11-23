@@ -259,20 +259,71 @@ void loop() {
     $('sysScore').textContent = `Session score: ${score.right} / ${score.total}`;
   }
 
-  /* ---------- Step-test fit ---------- */
-  function fit() {
+  /* ---------- Step test: prediction now, measured points later ---------- */
+  let measured = null;   // {pts:[[t,v]...], vf, K, tau}
+  function fit(silent) {
     const step = +$('sysStep').value, fb = $('sysFitFb');
     const pts = $('sysCsv').value.split(/\n/).map(l => l.trim().split(/[\s,;]+/).map(Number))
       .filter(a => a.length >= 2 && a.every(Number.isFinite));
-    if (pts.length < 8 || !(step > 0)) { fb.className = 'fb no'; fb.textContent = 'Need at least 8 lines of "t, speed" and a PWM step above 0.'; return; }
+    if (pts.length < 8 || !(step > 0)) { if (!silent) { fb.className = 'fb no'; fb.textContent = 'Need at least 8 lines of "t, speed" and a PWM step above 0.'; } return; }
     const t0 = pts[0][0], tail = pts.slice(Math.floor(pts.length * 0.8));
     const vf = tail.reduce((s, a) => s + a[1], 0) / tail.length;
     const t63 = crossing(pts.map(a => a[0] - t0), pts.map(a => a[1]), 0.632 * vf);
     if (!(vf > 0) || !Number.isFinite(t63)) { fb.className = 'fb no'; fb.textContent = 'Could not find the 63.2 % point. Check that speed rises from 0 and the log is long enough to settle.'; return; }
-    $('sysK').value = (vf / step).toFixed(5); $('sysTau').value = t63.toFixed(4); source = 'measured';
+    measured = { pts: pts.map(a => [a[0] - t0, a[1]]), vf, K: vf / step, tau: t63 };
+    $('sysK').value = measured.K.toFixed(5); $('sysTau').value = t63.toFixed(4); source = 'measured';
     fb.className = 'fb ok';
-    fb.textContent = `Final speed ${f(vf, 3)} m/s → K = ${f(vf / step, 5)} (m/s)/%; 63.2 % reached at τ = ${f(t63 * 1000, 1)} ms. The design below now uses the measured plant.`;
+    fb.textContent = `Final speed ${f(vf, 3)} m/s → K = ${f(measured.K, 5)} (m/s)/%; 63.2 % reached at τ = ${f(t63 * 1000, 1)} ms. The design on this page now uses the measured plant.`;
     update();
+  }
+  function clearFit() {
+    measured = null; $('sysCsv').value = ''; $('sysFitFb').className = 'fb'; $('sysFitFb').textContent = '';
+    $('sysK').value = DATASHEET.K; $('sysTau').value = DATASHEET.tau; source = 'datasheet'; update();
+  }
+  function stepPlot() {
+    const step = +$('sysStep').value, c = pal();
+    $('sysStepV').textContent = step + ' %';
+    const T = Math.max(6 * DATASHEET.tau, measured ? measured.pts[measured.pts.length - 1][0] : 0);
+    const n = 300, tt = Array.from({ length: n + 1 }, (_, i) => T * i / n);
+    const curve = (K, tau) => tt.map(t => K * step * (1 - Math.exp(-t / tau)));
+    const vPred = DATASHEET.K * step;
+    const tr = [
+      { x: tt, y: curve(DATASHEET.K, DATASHEET.tau), name: 'Predicted (datasheet estimate)', line: { color: c.main, width: 3 } },
+      { x: [DATASHEET.tau], y: [0.632 * vPred], name: `Predicted τ = ${f(DATASHEET.tau * 1000, 1)} ms`, mode: 'markers', marker: { color: c.main, size: 11, symbol: 'diamond' } }
+    ];
+    if (measured) {
+      tr.push({ x: measured.pts.map(a => a[0]), y: measured.pts.map(a => a[1]), name: 'Measured (encoder log)', mode: 'markers', marker: { color: '#15803d', size: 5 } });
+      tr.push({ x: tt, y: curve(measured.K, measured.tau), name: 'Fit to measurement', line: { color: '#15803d', dash: 'dash', width: 2 } });
+      tr.push({ x: [measured.tau], y: [0.632 * measured.vf], name: `Measured τ = ${f(measured.tau * 1000, 1)} ms`, mode: 'markers', marker: { color: '#15803d', size: 11, symbol: 'diamond-open', line: { width: 2 } } });
+    }
+    if (window.Plotly) Plotly.react('sysPlotStep', tr, lay('Time after the PWM step (s)', 'Wheel speed v (m/s)'), CFG);
+    const rows = [['Predicted final speed', f(vPred, 3) + ' m/s'], ['Predicted τ', f(DATASHEET.tau * 1000, 1) + ' ms']];
+    if (measured) rows.push(['Measured final speed', f(measured.vf, 3) + ' m/s'], ['Measured τ', f(measured.tau * 1000, 1) + ' ms'],
+      ['Estimate error K / τ', `${f((DATASHEET.K / measured.K - 1) * 100, 0)} % / ${f((DATASHEET.tau / measured.tau - 1) * 100, 0)} %`]);
+    else rows.push(['Measured', 'not yet — paste the log']);
+    $('sysStepStats').innerHTML = rows.map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+  }
+
+  /* ---------- Left vs right wheel: P only vs PI ---------- */
+  function wheelPlot(p, d, base) {
+    const mis = +$('sysMis').value / 100, W = +$('sysW').value / 1000, c = pal();
+    $('sysMisV').textContent = '± ' + f(mis * 100, 0) + ' %'; $('sysWV').textContent = f(W * 1000, 0) + ' mm';
+    const run = (k, Ki) => simulate(Object.assign({}, base, { K: p.K * k, Ki }));
+    const P = { L: run(1 + mis, 0), R: run(1 - mis, 0) }, PI = { L: run(1 + mis, d.Ki), R: run(1 - mis, d.Ki) };
+    const drift = s => { const vl = s.L.final, vr = s.R.final, vm = (vl + vr) / 2;
+      return { vl, vr, deg: vm > 0 ? (vl - vr) / W * (0.18 / vm) * 180 / Math.PI : NaN }; };
+    const a = drift(P), b = drift(PI), T = base.T;
+    if (window.Plotly) Plotly.react('sysPlotWheels', [
+      { x: [0, T], y: [p.r, p.r], name: 'Setpoint r', line: { color: '#15803d', dash: 'dash', width: 2 } },
+      { x: PI.L.t, y: PI.L.y, name: 'PI · left (K +δ)', line: { color: c.main, width: 3 } },
+      { x: PI.R.t, y: PI.R.y, name: 'PI · right (K −δ)', line: { color: c.dark, width: 3, dash: 'dot' } },
+      { x: P.L.t, y: P.L.y, name: 'P only · left', line: { color: '#7c3aed', width: 2 } },
+      { x: P.R.t, y: P.R.y, name: 'P only · right', line: { color: '#7c3aed', width: 2, dash: 'dot' } }
+    ], lay('Time (s)', 'Wheel speed v (m/s)'), CFG);
+    $('sysWheelStats').innerHTML = [
+      ['P only: left / right', `${f(a.vl, 3)} / ${f(a.vr, 3)} m/s`], ['P only: turn per cell', f(a.deg, 1) + '°'],
+      ['PI: left / right', `${f(b.vl, 3)} / ${f(b.vr, 3)} m/s`], ['PI: turn per cell', f(Math.abs(b.deg) < 0.05 ? 0 : b.deg, 1) + '°']
+    ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
   }
 
   /* ---------- Main update ---------- */
@@ -302,6 +353,8 @@ void loop() {
       ['Whole spec', allPass ? '✅ PASS' : '❌ not met']
     ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
     plot(p, d, sim, alt);
+    stepPlot();
+    wheelPlot(p, d, base);
     $('sysCode').textContent = code(p, d);
     if (!q) newQ();
   }
@@ -347,7 +400,10 @@ void loop() {
   ['sysK', 'sysTau'].forEach(id => $(id).addEventListener('input', () => { source = 'manual'; update(); }));
   $('sysDatasheet').addEventListener('click', () => { $('sysK').value = DATASHEET.K; $('sysTau').value = DATASHEET.tau; source = 'datasheet'; update(); });
   $('sysFinal').addEventListener('click', final);
-  $('sysFit').addEventListener('click', fit);
+  $('sysFit').addEventListener('click', () => fit(false));
+  $('sysClear').addEventListener('click', clearFit);
+  $('sysStep').addEventListener('input', () => { if (measured) fit(true); else stepPlot(); });
+  ['sysMis', 'sysW'].forEach(id => $(id).addEventListener('input', update));
   $('sysNew').addEventListener('click', newQ);
   $('sysCheck').addEventListener('click', check);
   $('sysAns').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
