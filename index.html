@@ -4,11 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dynamic Characteristics Toolkit</title>
-<meta name="description" content="ENCS4380 Homework 1 - interactive toolkit for sensor dynamic characteristics">
+<meta name="description" content="ENCS4380 Homeworks 1 and 2 - sensor dynamics and PID control toolkit">
 <link rel="stylesheet" href="p1.css">
 <link rel="stylesheet" href="p2.css">
 <link rel="stylesheet" href="p3.css">
 <link rel="stylesheet" href="p4.css">
+<link rel="stylesheet" href="sys.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
@@ -215,6 +216,7 @@ ul.tight li{margin-bottom:6px}
       <a href="#p2" data-page="p2"><span class="num">P2</span>Slow sensor in the loop<span class="tag">Live</span></a>
       <a href="#p3" data-page="p3"><span class="num">P3</span>Digital PID<span class="tag">Live</span></a>
       <a href="#p4" data-page="p4"><span class="num">P4</span>Tuning challenge<span class="tag">Live</span></a>
+      <a href="#sys" data-page="sys"><span class="num">★</span>My system: micromouse<span class="tag">Live</span></a>
       <a href="#val" data-page="val"><span class="num">✓</span>Validation checks</a>
       <a href="#team" data-page="team"><span class="num">☺</span>Team</a>
     </nav>
@@ -248,7 +250,7 @@ ul.tight li{margin-bottom:6px}
         <h1>Dynamic Characteristics Interactive Toolkit</h1>
         <p>A sensor never reports the present. It reports the past, smoothed. This toolkit lets you move the parameters and watch how far behind a sensor is.</p>
         <div class="chips">
-          <span class="chip">Homework 1</span>
+          <span class="chip">Homeworks 1 &amp; 2</span>
           <span class="chip">Birzeit University</span>
           <span class="chip">Dr. Wasel Ghanem</span>
           <span class="chip">First Semester 2026/2027</span>
@@ -260,9 +262,9 @@ ul.tight li{margin-bottom:6px}
           <h3>Course</h3>
           <dl class="info">
             <dt>Course</dt><dd>ENCS4380 — Interfacing Techniques</dd>
-            <dt>Assignment</dt><dd>Homework 1: Dynamic Characteristics Interactive Toolkit</dd>
+            <dt>Assignment</dt><dd>Homework 1: Dynamic Characteristics Toolkit · Homework 2: PID Control Toolkit</dd>
             <dt>Instructor</dt><dd>Dr. Wasel Ghanem</dd>
-            <dt>Due</dt><dd>Thursday, 12 November 2026</dd>
+            <dt>Due</dt><dd>HW1: Thursday 12 November 2026 · HW2: Monday 23 November 2026</dd>
           </dl>
         </div>
         <div class="card">
@@ -288,6 +290,7 @@ ul.tight li{margin-bottom:6px}
           <a class="modcard" href="#p2"><div class="n">P2</div><b>A slow sensor in the loop</b><small>True output vs sensor reading · sensor τs · overshoot until oscillation</small><br><span class="status live">Live</span></a>
           <a class="modcard" href="#p3"><div class="n">P3</div><b>Digital PID</b><small>Sampling time · staircase control · anti-windup · Arduino sketch</small><br><span class="status live">Live</span></a>
           <a class="modcard" href="#p4"><div class="n">P4</div><b>Tuning challenge</b><small>PID tuning challenge · score your solution</small><br><span class="status live">Live</span></a>
+          <a class="modcard" href="#sys"><div class="n">★</div><b>My system: micromouse</b><small>N20 drive motor · PI speed loop · ESP32 code</small><br><span class="status live">Live</span></a>
         </div>
       </div>
     </section>
@@ -834,11 +837,106 @@ ul.tight li{margin-bottom:6px}
 
 
 
+    <!-- ===== HOMEWORK 2: MY SYSTEM (Micromouse drive motor) ===== -->
+    <section class="page" id="sys">
+      <div class="pagehead">
+        <div><div class="kicker">Homework 2 · Applying it to our project</div><h1>My system · Micromouse drive-motor speed loop</h1></div>
+        <div class="owner">Team T21 (Xeno25)</div>
+      </div>
+      <div class="card">
+        <p>Our course project is a micromouse (ESP32, two N20 gear motors with Hall encoders, DRV8833 driver). Each wheel needs its own <b>speed loop</b>: the encoder measures wheel speed, a PI controller sets the PWM duty, and the mouse drives straight only if both wheels hold the commanded speed. We model one wheel as the first-order plant from Module 1 and design the controller with the tools from P1–P3.</p>
+        <div class="eqrow"><span class="eq">G(s) = V(s)/U(s) = K / (τs + 1)</span><span class="eq">u = PWM duty, 0–100 %</span><span class="eq">v = wheel speed, m/s</span></div>
+      </div>
+
+      <div class="sys-split">
+        <div class="card">
+          <h3>1 · Plant model and where the numbers come from</h3>
+          <div class="tablewrap"><table class="sys-table">
+            <thead><tr><th>Quantity</th><th>Value</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr><td>Motor</td><td>JGA12-N20, 6 V, 500 RPM, 7 PPR Hall encoder</td><td>Our order (AliExpress listing, option "500 RPM / 6V")</td></tr>
+              <tr><td>Wheel diameter d</td><td>43 mm</td><td>Our order: "N20 D-hole 43 mm rubber wheel"</td></tr>
+              <tr><td>Driver / supply</td><td>DRV8833 (1.5 A/ch); 2S LiPo 7.4 V → LM2596 set to 6 V</td><td>Our M0 bill of materials and order</td></tr>
+              <tr><td>Gear ratio N</td><td>≈ 1 : 30</td><td>JGA12-N20 family: ≈ 15 000 RPM motor ÷ 500 RPM output <span class="sys-tag est">assumed</span></td></tr>
+              <tr><td>Encoder counts / wheel rev</td><td>7 × 30 × 4 = 840 (×4 quadrature)</td><td>7 PPR from listing × N</td></tr>
+              <tr><td><b>K</b> (100 % PWM = 6 V)</td><td><b>v<sub>max</sub>/100 = 500·π·0.043/60/100 ≈ 0.0113 (m/s)/%</b></td><td>Listing RPM, no-load <span class="sys-tag ds">datasheet</span></td></tr>
+              <tr><td><b>τ</b> (mechanical)</td><td><b>τ = R·J / (K<sub>t</sub>K<sub>e</sub>) ≈ 0.039 s</b></td><td>Calculated, see below <span class="sys-tag est">estimate</span></td></tr>
+            </tbody>
+          </table></div>
+          <details class="sys-details"><summary>How τ was estimated (open)</summary>
+            <p>For a DC motor with armature resistance R, torque/back-EMF constant K<sub>t</sub> = K<sub>e</sub> and inertia J seen at the motor shaft, the speed response to a voltage step is first order with τ = R·J/(K<sub>t</sub>K<sub>e</sub>) (inductance neglected).</p>
+            <ul class="tight">
+              <li>R = 6 V / 0.75 A (typical N20 stall current) = 8 Ω <span class="sys-tag est">assumed</span></li>
+              <li>K<sub>e</sub> = (6 − 0.05·8) V / (15 000 RPM = 1571 rad/s) = 0.00357 V·s/rad (0.05 A no-load current, assumed)</li>
+              <li>J = J<sub>rotor</sub> + (m/2)·r²/N² = 1.0×10⁻⁸ + (0.20/2)(0.0215)²/30² = 6.1×10⁻⁸ kg·m² (robot ≈ 200 g, half on each wheel)</li>
+              <li>τ = 8 × 6.1×10⁻⁸ / 0.00357² ≈ <b>0.039 s</b></li>
+            </ul>
+            <p class="note">These are estimates because the seller does not publish R, J or the stall current. The step-test box replaces them with measured values as soon as we log the real motor.</p>
+          </details>
+        </div>
+
+        <div class="card controls">
+          <h3>Plant values used on this page</h3>
+          <label for="sysK">K ((m/s) per % PWM)</label><input type="number" id="sysK" step="0.0001" min="0.0005" value="0.01126">
+          <label for="sysTau">τ (s)</label><input type="number" id="sysTau" step="0.001" min="0.002" value="0.0386">
+          <div class="btnrow"><button class="btn" type="button" id="sysDatasheet">Use datasheet estimate</button></div>
+          <p class="note" id="sysSource"></p>
+          <hr class="sys-divider">
+          <h3>Have step-test data?</h3>
+          <p class="note">Run the motor from rest with a fixed PWM step and log <code>t, speed</code> (s, m/s), one pair per line. The page fits K = v<sub>final</sub>/ΔPWM and τ = time to 63.2 %.</p>
+          <label for="sysStep">PWM step (%)</label><input type="number" id="sysStep" value="60" min="1" max="100">
+          <textarea id="sysCsv" rows="5" placeholder="0.00, 0.000&#10;0.01, 0.110&#10;0.02, 0.215&#10;..."></textarea>
+          <div class="btnrow"><button class="btn primary" type="button" id="sysFit">Fit K and τ</button></div>
+          <div class="fb" id="sysFitFb"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>2 · The spec we chose, and why it matters for the micromouse</h3>
+        <div class="tablewrap"><table class="sys-table">
+          <thead><tr><th>Requirement</th><th>Limit</th><th>Why</th><th>Result</th></tr></thead>
+          <tbody id="sysSpec"></tbody>
+        </table></div>
+        <p class="note">Test input: a step in commanded wheel speed from 0 to the cruise speed r. One maze cell is 180 mm, so at 0.5 m/s the mouse crosses a cell in 0.36 s. The wheel speed must settle well inside the first half of the cell, or the encoder-based distance count and the straight-line correction start from a wrong speed.</p>
+      </div>
+
+      <div class="sys-split left">
+        <div class="card controls">
+          <h3>3 · PI design (pole placement)</h3>
+          <p class="note">Closed loop: τs² + (1 + K·Kp)s + K·Ki = 0, so ωₙ² = K·Ki/τ and ζ = (1 + K·Kp)/(2√(τK·Ki)). Choosing ζ and the 2 % settling time t<sub>s</sub> ≈ 4/(ζωₙ) gives the gains directly.</p>
+          <label for="sysZeta">Target damping ζ <span class="val" id="sysZetaV"></span></label><input type="range" id="sysZeta" min="0.5" max="1" step="0.05" value="0.7">
+          <label for="sysTs">Target settling time t<sub>s</sub> (s) <span class="val" id="sysTsV"></span></label><input type="range" id="sysTs" min="0.06" max="0.4" step="0.01" value="0.15">
+          <label for="sysR">Cruise speed step r (m/s) <span class="val" id="sysRV"></span></label><input type="range" id="sysR" min="0.1" max="1.1" step="0.05" value="0.5">
+          <label for="sysT">Controller sampling time Ts (ms) <span class="val" id="sysTV"></span></label><input type="range" id="sysT" min="1" max="30" step="1" value="5">
+          <div class="stats" id="sysGains"></div>
+          <div class="btnrow"><button class="btn primary" type="button" id="sysFinal">Our final design</button></div>
+        </div>
+        <div>
+          <div class="card"><h3>Simulated wheel speed</h3><div id="sysPlotV" class="sys-plot" aria-label="Simulated wheel speed against the setpoint"></div><p class="note">Solid: our model. Dashed: the same controller if the real τ is half or 1.5× our estimate, since τ is not measured yet. Digital PI at Ts with zero-order hold; the motor is integrated with forward Euler at Ts/40.</p></div>
+          <div class="card"><h3>PWM command</h3><div id="sysPlotU" class="sys-small" aria-label="PWM duty cycle command with 0 and 100 percent limits"></div><p class="note">Red dashed lines are the physical limits 0 % and 100 %. The command is clamped there and the integrator is frozen while clamped (anti-windup).</p></div>
+        </div>
+      </div>
+
+      <div class="card"><h3>Live results</h3><div class="stats" id="sysMetrics"></div></div>
+
+      <div class="card predict"><h3>Predict, then check</h3>
+        <p class="qtext" id="sysQ"></p>
+        <div class="btnrow" style="align-items:center"><input type="number" id="sysAns" step="any" placeholder="Your answer" aria-label="Prediction"><span id="sysUnit"></span><button class="btn primary" type="button" id="sysCheck">Check</button><button class="btn" type="button" id="sysNew">New question</button></div>
+        <div class="fb" id="sysFb"></div><p class="note" id="sysScore"></p>
+      </div>
+
+      <div class="card">
+        <div class="sys-headline"><h3>4 · Generated ESP32 code for our robot</h3><button class="btn primary" type="button" id="sysCopy">Copy code</button></div>
+        <p class="note">Arduino-ESP32 sketch for one wheel: quadrature encoder interrupt, speed from counts every Ts, the same PI and anti-windup as the simulation, DRV8833 PWM on IN1/IN2, and serial logging of <code>t, v, u</code> so the real response can be plotted against this page. Pin numbers are placeholders until <code>robot_config.h</code> is filled in (milestone M3/M4).</p>
+        <pre class="sys-code" id="sysCode" aria-label="Generated ESP32 code"></pre>
+      </div>
+    </section>
+
     <!-- ===== VALIDATION ===== -->
     <section class="page" id="val">
       <div class="pagehead"><div><div class="kicker">Required by the brief</div><h1>Validation checks</h1></div></div>
       <div class="card">
-        <p class="note">Results from the lecture slides that the toolkit must reproduce. Test 1 is computed live from the Module 1 curve with τ = 2 s, K = 1, A = 10.</p>
+        <p class="note">Results from the lecture slides that the toolkit must reproduce. Test 1 is computed live from the Module 1 curve with τ = 2 s, K = 1, A = 10. Tests 7–9 are the Homework 2 checks, run through our own closed-loop Euler simulation of K/(τs + 1) with K = 1 and τ = 1 s.</p>
         <div class="tablewrap">
           <table>
             <thead><tr><th>#</th><th>Check</th><th>Expected</th><th>Our value</th><th>Result</th></tr></thead>
@@ -858,7 +956,7 @@ ul.tight li{margin-bottom:6px}
         <h3>Course</h3>
         <dl class="info">
           <dt>Course</dt><dd>ENCS4380 — Interfacing Techniques, Birzeit University</dd>
-          <dt>Assignment</dt><dd>Homework 1: Dynamic Characteristics Interactive Toolkit</dd>
+          <dt>Assignment</dt><dd>Homework 1: Dynamic Characteristics Toolkit · Homework 2: PID Control Toolkit</dd>
           <dt>Instructor</dt><dd>Dr. Wasel Ghanem</dd>
         </dl>
       </div>
@@ -873,8 +971,8 @@ ul.tight li{margin-bottom:6px}
 const GROUP_NAME = "";
 const TEAM = [
   { name: "Dalia Abu Baker",          role: "Module 1 — First-order time response; HW2 P2 — Slow sensor in the loop" },
-  { name: "Ghaleb Raed",              role: "Module  3 — Second-order response + State-space panel " },
-  { name: "Hala Sarsour",             role: "Module  4; P4 - tuning challenge " },
+  { name: "Ghaleb Raed",              role: "Module 3 — Second-order response + State-space panel; HW2 P1 — PID playground" },
+  { name: "Hala Sarsour",             role: "Module 4 — Guess the sensor; HW2 P4 — Tuning challenge" },
   { name: "Mohammad Isam Obeidallah", role: "HW1 Modules 2 & 3; HW2 P3 — Digital PID" }
 ];
 /* Who built each module (shown at the top of each module page) */
@@ -915,6 +1013,7 @@ function route(){
   if(target === 'p2' && window.P2SlowSensor){ window.P2SlowSensor.update(); window.P2SlowSensor.plotSweep(); }
   if(target === 'p3' && window.P3DigitalPID) window.P3DigitalPID.update();
   if(target === 'p4' && window.P4Tuning) window.P4Tuning.update();
+  if(target === 'sys' && window.SysLoop) window.SysLoop.update();
 }
 window.addEventListener('hashchange', route);
 
@@ -923,7 +1022,7 @@ document.querySelectorAll('.themes button').forEach(b => b.onclick = () => {
   document.body.dataset.theme = b.dataset.t;
   document.querySelectorAll('.themes button').forEach(x => x.classList.toggle('on', x === b));
   try { localStorage.setItem('dyn-theme', b.dataset.t); } catch(e) {}
-  if(window.Plotly){ update(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); if(window.P2SlowSensor) window.P2SlowSensor.update(); if(window.P3DigitalPID) window.P3DigitalPID.update(); }
+  if(window.Plotly){ update(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); if(window.P2SlowSensor) window.P2SlowSensor.update(); if(window.P3DigitalPID) window.P3DigitalPID.update(); if(window.SysLoop) window.SysLoop.update(); }
 });
 try { const t = localStorage.getItem('dyn-theme'); if(t){ const b=document.querySelector(`.themes button[data-t="${t}"]`); if(b) b.click(); } } catch(e) {}
 
@@ -1128,6 +1227,7 @@ function renderValAll(){
     ['5','ζ = 1','No overshoot','0% (critically damped)',true],
     ['6','m = 1, b = 2, k = 4','Eigenvalues = −1 ± j1.732',`${m3RootStr(eig[0])}, ${m3RootStr(eig[1])}`,Math.abs(eig[0].re+1)<1e-9 && Math.abs(Math.abs(eig[0].im)-Math.sqrt(3))<1e-9]
   ];
+  if(window.HW2Checks) window.HW2Checks().forEach(r=>rows.push([String(rows.length+1)].concat(r)));
   $('valAll').innerHTML=rows.map(([i,n,e,y,ok])=>`<tr><td>${i}</td><td>${n}</td><td>${e}</td><td>${y}</td><td>${pill(ok)}</td></tr>`).join('');
 }
 
@@ -1749,7 +1849,7 @@ function loadPlotly(i){
   s.onerror=() => loadPlotly(i+1);
   document.head.appendChild(s);
 }
-function onPlotlyReady(){ update(); newQuestion(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); if(window.P2SlowSensor) window.P2SlowSensor.update(); if(window.P3DigitalPID) window.P3DigitalPID.update();if (window.p4Redraw) p4Redraw(); }
+function onPlotlyReady(){ update(); newQuestion(); updateM2(); updateM3(); if(window.P1Controller) window.P1Controller.update(); if(window.P2SlowSensor) window.P2SlowSensor.update(); if(window.P3DigitalPID) window.P3DigitalPID.update();if (window.p4Redraw) p4Redraw(); if(window.SysLoop) window.SysLoop.update(); }
 
 updateM2();
 updateM3();
@@ -1764,5 +1864,6 @@ loadPlotly(0);
 <script src="p2.js"></script>
 <script src="p3.js"></script>
 <script src="p4.js"></script>
+<script src="sys.js"></script>
 </body>
 </html>
