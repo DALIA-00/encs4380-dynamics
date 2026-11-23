@@ -106,6 +106,7 @@ aside{
 .avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-family:Sora,sans-serif;flex:0 0 46px}
 .member b{display:block;font-size:.95rem}
 .member span{font-size:.8rem;color:var(--muted)}
+.member span.sid{display:block;font-weight:700;color:var(--main-dark);font-variant-numeric:tabular-nums;margin:1px 0 2px}
 
 .modcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .modcard{display:block;text-decoration:none;color:inherit;padding:16px;border-radius:14px;border:1px solid var(--line);background:#fff;transition:transform .15s,box-shadow .15s}
@@ -250,6 +251,7 @@ ul.tight li{margin-bottom:6px}
         <h1>Dynamic Characteristics Interactive Toolkit</h1>
         <p>A sensor never reports the present. It reports the past, smoothed. This toolkit lets you move the parameters and watch how far behind a sensor is.</p>
         <div class="chips">
+          <span class="chip">Team 21 · Xeno25</span>
           <span class="chip">Homeworks 1 &amp; 2</span>
           <span class="chip">Birzeit University</span>
           <span class="chip">Dr. Wasel Ghanem</span>
@@ -994,12 +996,12 @@ ul.tight li{margin-bottom:6px}
 /* =========================================================
    EDIT YOUR TEAM HERE
    ========================================================= */
-const GROUP_NAME = "";
+const GROUP_NAME = "Team 21 (Xeno25)";
 const TEAM = [
-  { name: "Dalia Abu Baker",          role: "Module 1 — First-order time response; HW2 P2 — Slow sensor in the loop" },
-  { name: "Ghaleb Raed",              role: "Module 3 — Second-order response + State-space panel; HW2 P1 — PID playground" },
-  { name: "Hala Sarsour",             role: "Module 4 — Guess the sensor; HW2 P4 — Tuning challenge" },
-  { name: "Mohammad Isam Obeidallah", role: "HW1 Modules 2 & 3; HW2 P3 — Digital PID" }
+  { name: "Dalia Abu Baker",          id: "1230357", role: "Module 1 — First-order time response; HW2 P2 — Slow sensor in the loop" },
+  { name: "Ghaleb Shakhsheer",        id: "1230075", role: "Module 3 — Second-order response + State-space panel; HW2 P1 — PID playground" },
+  { name: "Hala Sarsour",             id: "1230058", role: "Module 4 — Guess the sensor; HW2 P4 — Tuning challenge" },
+  { name: "Mohammad Isam Obeidallah", id: "1230727", role: "HW1 Modules 2 & 3; HW2 P3 — Digital PID" }
 ];
 /* Who built each module (shown at the top of each module page) */
 const MODULE_OWNERS = {
@@ -1010,7 +1012,7 @@ const MODULE_OWNERS = {
 /* ---------- Team rendering ---------- */
 const AV = ['#E24C00','#C35214','#FF9913','#E2725B','#CD7F32','#F76806'];
 function initials(n){ return n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join(''); }
-function memberHTML(m,i){ return `<div class="member"><div class="avatar" style="background:${AV[i%AV.length]}">${initials(m.name)}</div><div><b>${m.name}</b><span>${m.role}</span></div></div>`; }
+function memberHTML(m,i){ return `<div class="member"><div class="avatar" style="background:${AV[i%AV.length]}">${initials(m.name)}</div><div><b>${m.name}</b>${m.id ? `<span class="sid">ID ${m.id}</span>` : ''}<span>${m.role}</span></div></div>`; }
 document.getElementById('teamMini').innerHTML = TEAM.map(memberHTML).join('');
 document.getElementById('teamFull').innerHTML = TEAM.map(memberHTML).join('');
 document.getElementById('groupName').textContent = GROUP_NAME ? '· ' + GROUP_NAME : '';
