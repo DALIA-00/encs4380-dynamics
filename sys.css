@@ -1,0 +1,22 @@
+/* Homework 2 — "My system" (micromouse). Every selector is scoped to #sys. */
+#sys .sys-split{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:15px;align-items:start}
+#sys .sys-split.left{grid-template-columns:320px minmax(0,1fr)}
+#sys .sys-split>*,#sys .card{min-width:0}
+#sys .sys-plot{height:360px;min-width:0}
+#sys .sys-small{height:260px;min-width:0}
+#sys .sys-table{width:100%;border-collapse:collapse;font-size:.88rem}
+#sys .sys-table th,#sys .sys-table td{text-align:left;vertical-align:top;padding:7px 9px;border-bottom:1px solid var(--line)}
+#sys .sys-table th{color:var(--muted);font-weight:600;font-size:.8rem}
+#sys .sys-tag{display:inline-block;border-radius:999px;padding:1px 8px;font-size:.72rem;font-weight:700;margin-left:4px;white-space:nowrap}
+#sys .sys-tag.est{background:#FEF3C7;color:#92400E}
+#sys .sys-tag.ds{background:#E6F4EA;color:var(--ok)}
+#sys .sys-details{margin-top:12px;background:var(--bg);border-radius:10px;padding:10px 13px}
+#sys .sys-details summary{cursor:pointer;font-weight:700;color:var(--main-dark)}
+#sys .sys-divider{border:0;border-top:1px solid var(--line);margin:16px 0}
+#sys textarea{width:100%;margin-top:8px;padding:9px 11px;border:1.5px solid var(--topaz);border-radius:10px;font:12px/1.45 'JetBrains Mono',monospace;resize:vertical}
+#sys .sys-code{background:#1d232a;color:#e8eef6;border-radius:12px;padding:17px;overflow-x:auto;font:12px/1.55 'JetBrains Mono',monospace;white-space:pre;max-height:520px}
+#sys .sys-headline{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#sys code{font-family:'JetBrains Mono',monospace;font-size:.85em;background:var(--champ);padding:1px 5px;border-radius:5px}
+#sys button:focus-visible,#sys input:focus-visible,#sys textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+@media(max-width:1050px){#sys .sys-split,#sys .sys-split.left{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){#sys .sys-plot{height:320px}#sys .sys-small{height:240px}#sys .sys-table{font-size:.82rem}}

@@ -1,10 +1,10 @@
 # encs4380-dynamics
 
-# Dynamic Characteristics Toolkit — ENCS4380 Homework 1
+# Dynamic Characteristics & PID Control Toolkit — ENCS4380 Homeworks 1 and 2
 
-Interactive web toolkit for sensor dynamic characteristics (ENCS4380 Interfacing Techniques, Birzeit University, Dr. Wasel Ghanem).
+Interactive web toolkit for sensor dynamic characteristics (Homework 1) and feedback control (Homework 2, the "Control" section, linked from the landing page) (ENCS4380 Interfacing Techniques, Birzeit University, Dr. Wasel Ghanem).
 
-**Live page:** [https://<your-github-username>.github.io/encs4380-dynamics-<group-name>/](https://dalia-00.github.io/encs4380-dynamics/)
+**Live page:** [https://dalia-00.github.io/encs4380-dynamics/](https://dalia-00.github.io/encs4380-dynamics/)
 
 ## Team
 
@@ -13,7 +13,8 @@ Interactive web toolkit for sensor dynamic characteristics (ENCS4380 Interfacing
 | Dalia Abu Baker| Module 1 — First-order time response; HW2 P2 — A slow sensor in the loop |
 | Mohammad Obeidallah | Module 2 — First-order frequency response; HW2 P3 — Digital PID |
 | Ghaleb Shakhsheer | HW1 Module 3 — Second-order response + state-space panel; HW2 P1 — PID playground |
-| Hala Sarsour | Module 4 — "Guess the sensor" challenge |
+| Hala Sarsour | Module 4 — "Guess the sensor" challenge; HW2 P4 — Tuning challenge |
+| Whole team (T21) | HW2 "My system" — micromouse drive-motor speed loop |
 
 ## Module 1 — First-order time response (thermometer)
 
@@ -49,6 +50,9 @@ Closed-form responses used (from the lecture slides):
 | 4 | ζ = 0.5 | overshoot 16.3 % | Module 3 |
 | 5 | ζ = 1 | no overshoot | Module 3 |
 | 6 | m = 1, b = 2, k = 4 | eigenvalues −1 ± j1.732 | Module 3 |
+| 7 | HW2: P only, Kp = 9, K = 1, τ = 1 s | τcl = 0.1 s, ess = 10 % | PASS (Validation page, closed-loop Euler simulation) |
+| 8 | HW2: PI, Kp = 1, Ki = 1 | ωn = 1 rad/s, ζ = 1 | PASS (also y(1 s) = 1 − e⁻¹, no overshoot) |
+| 9 | HW2: any PI | zero steady-state error for a step | PASS (five gain sets) |
 ## Module 2 — First-order frequency response
 
 Model: G(s) = K/(τs + 1), M = 1/√(1 + (ωτ)²), φ = −tan⁻¹(ωτ)
@@ -90,6 +94,8 @@ Static HTML + JavaScript, plots with [Plotly.js](https://plotly.com/javascript/)
 ## AI use
 
 An AI assistant (Claude) was used to help write the Module 1 page code and this README. All formulas were checked against the lecture slides and the validation numbers.
+
+HW2 "My system": Claude (Anthropic) was used to help write the My system page (`sys.js`, `sys.css`, its section of `index.html`), the HW2 rows of the Validation page and this README update. The motor numbers come from our own parts order; the τ estimate, the PI pole-placement formulas and the generated ESP32 code were checked against the lecture formulas and the validation checks.
 
 HW2 P2: Claude (Anthropic) was used to help write the P2 page (`p2.js`, `p2.css`, the P2 section of `index.html`) and its README entry. The Routh–Hurwitz threshold and the P-only damping formula come from the closed-loop characteristic equation and are checked by the validation table on the page.
 
@@ -138,4 +144,33 @@ HW2 P2: Claude (Anthropic) was used to help write the P2 page (`p2.js`, `p2.css`
 
 **GitHub:** Issue #10, Pull Request #11.
 
+- **P4 — Tuning challenge (Hala Sarsour):** [Open P4](https://dalia-00.github.io/encs4380-dynamics/#p4).
+- A hidden random plant is drawn each round (first or second order, reusing the HW1 Module 4 idea), and the page builds a spec from a reference design: overshoot limit, 2 % settling time, zero steady-state error and a control-signal peak limit.
+- Kp, Ki, Kd sliders; the closed loop is stepped in time with RK4 (filtered derivative).
+- PASS/FAIL for each part of the spec, a score per round and a running session score, hints, and a "Predict, then check" question about how a gain change moves the overshoot.
 
+**P4 source files:** `p4.js`, `p4.css`, and the P4 section in `index.html`.
+
+## Homework 2 — My system: micromouse drive-motor speed loop
+
+[Open the page](https://dalia-00.github.io/encs4380-dynamics/#sys). Our project is the micromouse (team T21), so the plant is one **drive wheel**: PWM duty u (0–100 %) in, wheel speed v (m/s) out, G(s) = K/(τs + 1).
+
+**Plant numbers and sources**
+
+| Quantity | Value | Source |
+|---|---|---|
+| Motor | JGA12-N20, 6 V, 500 RPM, 7 PPR Hall encoder | our parts order (option "500 RPM / 6V") |
+| Wheel | 43 mm rubber wheel | our parts order |
+| Driver / supply | DRV8833; 2S LiPo through an LM2596 set to 6 V | our M0 bill of materials |
+| K | 500 RPM · π · 0.043 m / 60 / 100 % ≈ **0.0113 (m/s)/%** | datasheet (no-load) |
+| τ | R·J/(KtKe) ≈ **0.039 s** (R = 8 Ω, 1:30 gearbox, 200 g robot assumed) | estimate, shown step by step on the page |
+
+τ is an estimate until we run the step test. The page has a box where a logged `t, speed` step test can be pasted; it fits K (final speed / PWM step) and τ (63.2 % time) and redesigns the controller from the measured plant.
+
+**Spec (and why):** ζ between 0.6 and 0.8 (lecture range), overshoot ≤ 10 % (a speed spike makes the wheel slip and the encoder over-count), 2 % settling time ≤ 0.15 s (at 0.5 m/s a 180 mm cell takes 0.36 s), zero steady-state error (both wheels must hold the same speed or the mouse curves), and PWM inside 0–100 %.
+
+**Design:** PI by pole placement, ζ = 0.7 and ts = 0.15 s → **Kp ≈ 94 %/(m/s), Ki ≈ 4975 %/(m/s·s)**, Ts = 5 ms. Simulated (digital PI, ZOH, forward Euler): 7.1 % overshoot, 0.13 s settling, 0 % error, peak PWM 64 %: every part of the spec passes. Dashed curves show the same controller if the real τ is 0.5× or 1.5× the estimate.
+
+**Generated code:** an ESP32 (Arduino core) sketch with x4 quadrature encoder interrupts, the same PI and anti-windup as the simulation, DRV8833 PWM and `t, v, u` serial logging, so the real response can be compared with the simulation (bonus). Pins are placeholders until `robot_config.h` is filled in.
+
+**Source files:** `sys.js` (model, design, simulation, spec check, step-test fit, code generator, HW2 validation checks), `sys.css`, and the My system section, menu link and home card in `index.html`.
