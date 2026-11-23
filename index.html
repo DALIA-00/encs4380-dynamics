@@ -881,13 +881,24 @@ ul.tight li{margin-bottom:6px}
           <label for="sysTau">τ (s)</label><input type="number" id="sysTau" step="0.001" min="0.002" value="0.0386">
           <div class="btnrow"><button class="btn" type="button" id="sysDatasheet">Use datasheet estimate</button></div>
           <p class="note" id="sysSource"></p>
-          <hr class="sys-divider">
-          <h3>Have step-test data?</h3>
-          <p class="note">Run the motor from rest with a fixed PWM step and log <code>t, speed</code> (s, m/s), one pair per line. The page fits K = v<sub>final</sub>/ΔPWM and τ = time to 63.2 %.</p>
-          <label for="sysStep">PWM step (%)</label><input type="number" id="sysStep" value="60" min="1" max="100">
-          <textarea id="sysCsv" rows="5" placeholder="0.00, 0.000&#10;0.01, 0.110&#10;0.02, 0.215&#10;..."></textarea>
-          <div class="btnrow"><button class="btn primary" type="button" id="sysFit">Fit K and τ</button></div>
-          <div class="fb" id="sysFitFb"></div>
+          <p class="note">Measured values from the step test below replace these automatically.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Step test · predicted now, measured later</h3>
+        <p>The brief asks Micromouse groups to find K and τ from a <b>PWM step test logged with the encoder</b>. Our encoder is not wired yet (milestone M4), so the solid curve is what our estimate <b>predicts</b> the test will show. When the test is run, paste the log and the measured points appear on the same plot, with the fitted K and τ.</p>
+        <div class="sys-split left">
+          <div class="controls">
+            <label for="sysStep">PWM step (%) <span class="val" id="sysStepV"></span></label><input type="range" id="sysStep" min="10" max="100" step="5" value="60">
+            <label for="sysCsv">Measured log: <code>t, speed</code> (s, m/s)</label>
+            <textarea id="sysCsv" rows="6" placeholder="paste the serial log here, one pair per line&#10;0.000, 0.000&#10;0.005, 0.071&#10;0.010, 0.135&#10;..."></textarea>
+            <div class="btnrow"><button class="btn primary" type="button" id="sysFit">Fit K and τ</button><button class="btn" type="button" id="sysClear">Clear</button></div>
+            <div class="fb" id="sysFitFb"></div>
+            <div class="stats" id="sysStepStats"></div>
+          </div>
+          <div><div id="sysPlotStep" class="sys-plot" aria-label="Open-loop step test: predicted motor speed and measured points"></div>
+          <p class="note">Open loop: the PWM jumps from 0 to the step at t = 0 and the controller is off. Prediction v(t) = K·ΔPWM·(1 − e<sup>−t/τ</sup>) from the datasheet estimate; the diamond marks 63.2 % of the final speed, reached at t = τ (the Module 1 method).</p></div>
         </div>
       </div>
 
@@ -918,6 +929,21 @@ ul.tight li{margin-bottom:6px}
       </div>
 
       <div class="card"><h3>Live results</h3><div class="stats" id="sysMetrics"></div></div>
+
+      <div class="card">
+        <h3>Why zero steady-state error matters: left vs right wheel</h3>
+        <p>Two cheap N20 motors are never identical. Here the left motor is a bit stronger and the right a bit weaker (K ± mismatch), both given the same speed command and the same controller. With <b>P only</b> each wheel settles at a different, too-low speed, so the mouse curves. With <b>PI</b> the integral keeps pushing until both wheels reach exactly r.</p>
+        <div class="sys-split left">
+          <div class="controls">
+            <label for="sysMis">Motor mismatch ±δ <span class="val" id="sysMisV"></span></label><input type="range" id="sysMis" min="0" max="20" step="1" value="10">
+            <label for="sysW">Track width W (wheel to wheel) <span class="val" id="sysWV"></span></label><input type="range" id="sysW" min="60" max="110" step="1" value="80">
+            <p class="note">W is a placeholder until the ten-spin test (milestone M6). Same Kp as the final design for both controllers; P only has Ki = 0.</p>
+            <div class="stats" id="sysWheelStats"></div>
+          </div>
+          <div><div id="sysPlotWheels" class="sys-plot" aria-label="Left and right wheel speed with P only and with PI"></div>
+          <p class="note">Heading error after one cell = (v<sub>L</sub> − v<sub>R</sub>)/W × (time to drive 180 mm). A few degrees per cell adds up over a 16-cell straight.</p></div>
+        </div>
+      </div>
 
       <div class="card predict"><h3>Predict, then check</h3>
         <p class="qtext" id="sysQ"></p>
